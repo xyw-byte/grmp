@@ -1,0 +1,865 @@
+<html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED控制器专家 - 网络名片</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0F4C81',      // 深蓝色主色调
+                        secondary: '#36B37E',    // 绿色辅助色(LED关联)
+                        accent: '#FF5630',       // 强调色
+                        dark: '#172B4D',         // 深色
+                        light: '#F4F5F7',        // 浅色背景
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .card-shadow {
+                box-shadow: 0 10px 25px -5px rgba(15, 76, 129, 0.1), 0 8px 10px -6px rgba(15, 76, 129, 0.1);
+            }
+            .card-shadow-hover {
+                transition: all 0.3s ease;
+            }
+            .card-shadow-hover:hover {
+                box-shadow: 0 20px 25px -5px rgba(15, 76, 129, 0.15), 0 10px 10px -5px rgba(15, 76, 129, 0.1);
+            }
+            .gradient-bg {
+                background: linear-gradient(135deg, #0F4C81 0%, #172B4D 100%);
+            }
+            .gradient-bg-overlay {
+                background: linear-gradient(135deg, rgba(15, 76, 129, 0.95), rgba(23, 43, 77, 0.95));
+            }
+            .lang-option {
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .lang-option:hover {
+                background-color: rgba(255,255,255,0.2);
+                transform: translateY(-1px);
+            }
+            .lang-option.active {
+                background-color: rgba(255,255,255,0.3);
+                font-weight: bold;
+            }
+            .product-card {
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+            .product-card:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.1);
+            }
+            .section-fade-in {
+                opacity: 0;
+                transform: translateY(10px);
+                animation: fadeIn 0.6s ease forwards;
+            }
+            @keyframes fadeIn {
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            .delay-100 { animation-delay: 0.1s; }
+            .delay-200 { animation-delay: 0.2s; }
+            .delay-300 { animation-delay: 0.3s; }
+            .delay-400 { animation-delay: 0.4s; }
+            .delay-500 { animation-delay: 0.5s; }
+            /* 平滑滚动 */
+            html {
+                scroll-behavior: smooth;
+            }
+            /* 按钮波纹效果 */
+            .btn-ripple {
+                position: relative;
+                overflow: hidden;
+            }
+            .btn-ripple:after {
+                content: "";
+                display: block;
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                pointer-events: none;
+                background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+                background-repeat: no-repeat;
+                background-position: 50%;
+                transform: scale(10, 10);
+                opacity: 0;
+                transition: transform .5s, opacity 1s;
+            }
+            .btn-ripple:active:after {
+                transform: scale(0, 0);
+                opacity: .3;
+                transition: 0s;
+            }
+            /* 按钮脉冲效果 */
+            .btn-pulse {
+                animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(255, 86, 48, 0.4);
+                }
+                70% {
+                    box-shadow: 0 0 0 10px rgba(255, 86, 48, 0);
+                }
+                100% {
+                    box-shadow: 0 0 0 0 rgba(255, 86, 48, 0);
+                }
+            }
+            /* 骨架屏加载效果 */
+            .skeleton {
+                background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+                background-size: 200% 100%;
+                animation: shimmer 1.5s infinite;
+            }
+            @keyframes shimmer {
+                0% { background-position: -200% 0; }
+                100% { background-position: 200% 0; }
+            }
+            /* 针对触摸设备优化按钮点击区域 */
+            @media (max-width: 640px) {
+                .lang-option {
+                    min-width: 44px;
+                    min-height: 44px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+            }
+            /* 产品图片容器优化 - 只显示主体内容的80% */
+            .product-image-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+                position: relative;
+            }
+            .product-image-container img {
+                object-fit: cover;
+                width: 125%;  /* 放大图片以便裁剪 */
+                height: 125%; /* 放大图片以便裁剪 */
+                position: absolute;
+                transform: scale(0.8); /* 缩小到80%显示 */
+                transition: transform 0.7s ease;
+            }
+            .product-image-container img:hover {
+                transform: scale(0.85); /* 悬停时略微放大 */
+            }
+            /* 头像容器保持原始显示 */
+            .avatar-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+            }
+            .avatar-container img {
+                object-fit: cover;
+                width: 100%;
+                height: 100%;
+                transition: transform 0.5s ease;
+            }
+            .avatar-container img:hover {
+                transform: scale(1.05); /* 轻微放大效果保持 */
+            }
+            /* 提示框样式 */
+            .toast {
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 10px 20px;
+                background-color: rgba(0, 0, 0, 0.8);
+                color: white;
+                border-radius: 4px;
+                z-index: 1000;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .toast.show {
+                opacity: 1;
+            }
+            /* 二维码容器 */
+            .qr-container {
+                display: none;
+                margin-top: 15px;
+                text-align: center;
+            }
+            @media (min-width: 768px) {
+                .qr-container {
+                    display: block;
+                }
+            }
+            /* 微信二维码容器样式 */
+            .wechat-qr-container {
+                position: relative;
+            }
+            .wechat-qr-tooltip {
+                visibility: hidden;
+                position: absolute;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: rgba(0, 0, 0, 0.8);
+                color: white;
+                text-align: center;
+                border-radius: 6px;
+                padding: 5px 10px;
+                z-index: 1;
+                font-size: 12px;
+                white-space: nowrap;
+                transition: visibility 0.3s;
+            }
+            .wechat-qr-container:hover .wechat-qr-tooltip {
+                visibility: visible;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light font-sans text-dark">
+    <!-- 提示框 -->
+    <div id="toast" class="toast">提示信息</div>
+    
+    <!-- 主容器 - 适配移动端的内边距和布局 -->
+    <div class="min-h-screen flex flex-col p-4 md:p-8">
+        <!-- 名片卡片 - 在小屏幕上占满宽度 -->
+        <div class="w-full max-w-3xl bg-white rounded-2xl overflow-hidden card-shadow card-shadow-hover mx-auto my-6">
+            <!-- 顶部信息区 - 移动端优化布局 -->
+            <div class="gradient-bg text-white p-5 md:p-8 relative overflow-hidden">
+                <!-- 背景装饰元素 -->
+                <div class="absolute inset-0 opacity-10">
+                    <div class="absolute top-0 right-0 w-40 h-40 rounded-full bg-white/20 -mr-20 -mt-20 animate-pulse" style="animation-duration: 6s;"></div>
+                    <div class="absolute bottom-0 left-0 w-60 h-60 rounded-full bg-white/10 -ml-30 -mb-30 animate-pulse" style="animation-duration: 8s; animation-delay: 1s;"></div>
+                    <!-- LED风格装饰 -->
+                    <div class="absolute top-1/4 left-1/4 w-1 h-1 bg-secondary rounded-full animate-ping opacity-75"></div>
+                    <div class="absolute bottom-1/3 right-1/3 w-1 h-1 bg-accent rounded-full animate-ping opacity-75" style="animation-delay: 0.5s;"></div>
+                </div>
+                
+                <div class="flex flex-col md:flex-row items-center relative z-10">
+                    <!-- 语言选择器 - 移动端堆叠显示 -->
+                    <div class="absolute top-3 right-3 flex flex-wrap gap-1 z-20">
+                        <span class="lang-option bg-white/10 px-3 py-1 rounded-full text-sm" data-lang="zh">中文</span>
+                        <span class="lang-option bg-white/10 px-3 py-1 rounded-full text-sm" data-lang="en">English</span>
+                        <span class="lang-option bg-white/10 px-3 py-1 rounded-full text-sm" data-lang="ja">日本語</span>
+                        <span class="lang-option bg-white/10 px-3 py-1 rounded-full text-sm" data-lang="ko">한국어</span>
+                        <span class="lang-option bg-white/10 px-3 py-1 rounded-full text-sm" data-lang="de">Deutsch</span>
+                    </div>
+                    
+                    <!-- 头像 - 保持原始显示效果 -->
+                    <div class="w-20 h-20 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-white/30 mb-4 md:mb-0 md:mr-6 mt-4 shadow-lg ring-4 ring-primary/20 avatar-container">
+                        <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/code_assistant/90cb40e1f7544431b4f219991c131a82~tplv-a9rns2rl98-image.image?rcl=20250807112639A19D26F454217E48C93C&amp;rk3s=8e244e95&amp;rrcfp=e75484ac&amp;x-expires=1755141999&amp;x-signature=%2FnONyPtfr5W49hGE9DqWjfM%2B4PE%3D" alt="LED控制器专家头像" class="">
+                    </div>
+                    
+                    <!-- 个人信息 - 移动端居中对齐 -->
+                    <div class="text-center md:text-left text-sm md:text-base">
+                        <h1 class="text-[clamp(1.2rem,4vw,2rem)] font-bold mb-1 text-shadow" data-i18n="name">肖跃武</h1>
+                        <h2 class="text-[clamp(0.9rem,2.5vw,1.2rem)] text-white/90 mb-3" data-i18n="title">LED智能控制系统专家</h2>
+                        <div class="flex flex-wrap justify-center md:justify-start gap-2">
+                            <span class="bg-white/20 px-2.5 py-0.5 rounded-full text-xs md:text-sm backdrop-blur-sm hover:bg-white/30 transition-colors transform hover:scale-105">
+                                <i class="fa fa-lightbulb-o mr-1"></i><span data-i18n="tag1">智能照明</span>
+                            </span>
+                            <span class="bg-white/20 px-2.5 py-0.5 rounded-full text-xs md:text-sm backdrop-blur-sm hover:bg-white/30 transition-colors transform hover:scale-105">
+                                <i class="fa fa-sliders mr-1"></i><span data-i18n="tag2">控制器开发</span>
+                            </span>
+                            <span class="bg-white/20 px-2.5 py-0.5 rounded-full text-xs md:text-sm backdrop-blur-sm hover:bg-white/30 transition-colors transform hover:scale-105">
+                                <i class="fa fa-cogs mr-1"></i><span data-i18n="tag3">系统集成</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 内容区 - 优化移动端内边距 -->
+            <div class="p-5 md:p-8">
+                <!-- 关于我 -->
+                <div class="mb-6 md:mb-8 section-fade-in">
+                    <h3 class="text-base md:text-lg font-semibold text-primary mb-3 flex items-center group">
+                        <i class="fa fa-user-circle mr-2 transform group-hover:scale-110 transition-transform"></i>
+                        <span data-i18n="about">关于我</span>
+                    </h3>
+                    <p class="text-gray-700 leading-relaxed text-sm md:text-base" data-i18n="aboutText">拥有12年LED控制系统研发与应用经验，专注于智能照明解决方案设计、LED控制器软硬件开发及系统集成。曾主导多个大型商业照明项目，擅长根据客户需求定制高效、稳定的LED控制方案。</p>
+                </div>
+                
+                <!-- 联系方式 -->
+                <div class="mb-6 md:mb-8 section-fade-in delay-100">
+                    <h3 class="text-base md:text-lg font-semibold text-primary mb-3 flex items-center group">
+                        <i class="fa fa-contact-card mr-2 transform group-hover:scale-110 transition-transform"></i>
+                        <span data-i18n="contact">联系方式</span>
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <div class="flex items-center p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-all duration-300 hover:border-primary/20 group cursor-pointer" id="phoneContact">
+                            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-4 hover:bg-primary/20 transition-colors group-hover:scale-110">
+                                <i class="fa fa-phone"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs md:text-sm text-gray-500" data-i18n="phone">电话</p>
+                                <p class="font-medium text-sm md:text-base">+8618816761182</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-all duration-300 hover:border-primary/20 group cursor-pointer" id="emailContact">
+                            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-4 hover:bg-primary/20 transition-colors group-hover:scale-110">
+                                <i class="fa fa-envelope"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs md:text-sm text-gray-500" data-i18n="email">邮箱</p>
+                                <p class="font-medium text-sm md:text-base">909323609@qq.com</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-all duration-300 hover:border-primary/20 group cursor-pointer">
+                            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-4 hover:bg-primary/20 transition-colors group-hover:scale-110">
+                                <i class="fa fa-map-marker"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs md:text-sm text-gray-500" data-i18n="address">地址</p>
+                                <p class="font-medium text-sm md:text-base" data-i18n="addressText">深圳市鑫昱智能电子科技有限公司</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-all duration-300 hover:border-primary/20 group cursor-pointer" id="wechatContact">
+                            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-4 hover:bg-primary/20 transition-colors group-hover:scale-110">
+                                <i class="fa fa-weixin"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs md:text-sm text-gray-500" data-i18n="wechat">微信</p>
+                                <p class="font-medium text-sm md:text-base">eku559</p>
+                            </div>
+                            <!-- 微信二维码 - 悬停显示 -->
+                            <div class="wechat-qr-container ml-auto">
+                                <div class="w-12 h-12 rounded-lg overflow-hidden border-2 border-white shadow-md">
+                                    <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/code_assistant/e3526b6b81a1421caa68b7bb62e012a0~tplv-a9rns2rl98-image.image?rcl=202508121608324505584EB163F19F2F07&amp;rk3s=8e244e95&amp;rrcfp=e75484ac&amp;x-expires=1755590912&amp;x-signature=7XzRjEbccDSmeLcOvM1BJS%2FH%2BGE%3D" alt="微信二维码" class="w-full h-full object-cover">
+                                </div>
+                                <span class="wechat-qr-tooltip" data-i18n="scanAddWechat">扫码添加微信</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 专业领域 -->
+                <div class="mb-6 md:mb-8 section-fade-in delay-200">
+                    <h3 class="text-base md:text-lg font-semibold text-primary mb-3 flex items-center group">
+                        <i class="fa fa-briefcase mr-2 transform group-hover:scale-110 transition-transform"></i>
+                        <span data-i18n="expertise">专业领域</span>
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <div class="flex items-start p-3 bg-light rounded-lg hover:bg-primary/5 transition-all duration-300 border border-transparent hover:border-secondary/30 group">
+                            <div class="text-secondary text-xl mr-3 mt-1 group-hover:scale-110 transition-transform"><i class="fa fa-microchip"></i></div>
+                            <div>
+                                <h4 class="font-medium text-sm md:text-base" data-i18n="field1">LED控制器开发</h4>
+                                <p class="text-xs md:text-sm text-gray-600" data-i18n="field1Desc">红外、RF433、蓝牙、WiFi等多种协议控制器</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start p-3 bg-light rounded-lg hover:bg-primary/5 transition-all duration-300 border border-transparent hover:border-secondary/30 group">
+                            <div class="text-secondary text-xl mr-3 mt-1 group-hover:scale-110 transition-transform"><i class="fa fa-mobile"></i></div>
+                            <div>
+                                <h4 class="font-medium text-sm md:text-base" data-i18n="field2">智能控制系统</h4>
+                                <p class="text-xs md:text-sm text-gray-600" data-i18n="field2Desc">手机APP、语音控制、场景联动</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start p-3 bg-light rounded-lg hover:bg-primary/5 transition-all duration-300 border border-transparent hover:border-secondary/30 group">
+                            <div class="text-secondary text-xl mr-3 mt-1 group-hover:scale-110 transition-transform"><i class="fa fa-line-chart"></i></div>
+                            <div>
+                                <h4 class="font-medium text-sm md:text-base" data-i18n="field3">照明方案设计</h4>
+                                <p class="text-xs md:text-sm text-gray-600" data-i18n="field3Desc">商业、工业、景观照明解决方案</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start p-3 bg-light rounded-lg hover:bg-primary/5 transition-all duration-300 border border-transparent hover:border-secondary/30 group">
+                            <div class="text-secondary text-xl mr-3 mt-1 group-hover:scale-110 transition-transform"><i class="fa fa-cogs"></i></div>
+                            <div>
+                                <h4 class="font-medium text-sm md:text-base" data-i18n="field4">技术咨询服务</h4>
+                                <p class="text-xs md:text-sm text-gray-600" data-i18n="field4Desc">项目评估、技术指导、问题诊断</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 项目经验图表 -->
+                <div class="mb-6 md:mb-8 section-fade-in delay-300">
+                    <h3 class="text-base md:text-lg font-semibold text-primary mb-3 flex items-center group">
+                        <i class="fa fa-bar-chart mr-2 transform group-hover:scale-110 transition-transform"></i>
+                        <span data-i18n="projectExp">项目经验分布</span>
+                    </h3>
+                    <div class="h-56 md:h-64 bg-light p-3 md:p-4 rounded-lg border border-gray-100 hover:border-primary/20 transition-all duration-300 shadow-sm hover:shadow-md">
+                        <canvas id="projectChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 产品案例 - 应用80%主体显示 -->
+                <div class="mb-6 md:mb-8 section-fade-in delay-400">
+                    <h3 class="text-base md:text-lg font-semibold text-primary mb-3 flex items-center group">
+                        <i class="fa fa-th-large mr-2 transform group-hover:scale-110 transition-transform"></i>
+                        <span data-i18n="products">产品案例</span>
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- 产品1 -->
+                        <div class="product-card bg-light rounded-xl overflow-hidden border border-gray-100">
+                            <div class="h-48 product-image-container relative">
+                                <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/code_assistant/5b0e2bca5a874234a9c068dfae4742c8~tplv-a9rns2rl98-image.image?rcl=20250812155444B8A97D4B0E14F68B225A&amp;rk3s=8e244e95&amp;rrcfp=2609e108&amp;x-expires=1755590088&amp;x-signature=Pz%2F3vQ1ENkpbEkuC4uOLA6pqaiU%3D" alt="WiFi智能LED控制器" class="">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-medium text-base mb-1" data-i18n="product1">WiFi智能LED控制器</h4>
+                                <p class="text-xs text-gray-600 mb-2" data-i18n="product1Desc">支持手机APP远程控制，兼容Alexa和Google Assistant</p>
+                                <div class="flex items-center text-xs text-gray-500">
+                                    <i class="fa fa-map-marker mr-1"></i>
+                                    <span data-i18n="product1App">商业照明、智能家居</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 产品2 -->
+                        <div class="product-card bg-light rounded-xl overflow-hidden border border-gray-100">
+                            <div class="h-48 product-image-container relative">
+                                <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/code_assistant/642a3be17725474c9960adff4ff2df8b~tplv-a9rns2rl98-image.image?rcl=202508121555225D052E11DCC71EA1183B&amp;rk3s=8e244e95&amp;rrcfp=2609e108&amp;x-expires=1755590126&amp;x-signature=0cCwClgUxemrJ8K%2BODgNbt%2FaGE0%3D" alt="红外智能控制器" class="">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-medium text-base mb-1" data-i18n="product2">红外智能控制器</h4>
+                                <p class="text-xs text-gray-600 mb-2" data-i18n="product2Desc">专业迷你灯光控制，操作简单，迷你小巧</p>
+                                <div class="flex items-center text-xs text-gray-500">
+                                    <i class="fa fa-map-marker mr-1"></i>
+                                    <span data-i18n="product2App">商业美化、应用广泛</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 产品3 -->
+                        <div class="product-card bg-light rounded-xl overflow-hidden border border-gray-100">
+                            <div class="h-48 product-image-container relative">
+                                <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/code_assistant/716d9eb002d3461c8801e0104bf97fcc~tplv-a9rns2rl98-image.image?rcl=20250812155608C4092339CEFF78B5B73A&amp;rk3s=8e244e95&amp;rrcfp=2609e108&amp;x-expires=1755590172&amp;x-signature=Id43%2BZupvJCF8s1ssT4ajsYWOS4%3D" alt="蓝牙Mesh控制器" class="">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-medium text-base mb-1" data-i18n="product3">蓝牙Mesh控制器</h4>
+                                <p class="text-xs text-gray-600 mb-2" data-i18n="product3Desc">自组网技术，支持上千节点，低功耗设计</p>
+                                <div class="flex items-center text-xs text-gray-500">
+                                    <i class="fa fa-map-marker mr-1"></i>
+                                    <span data-i18n="product3App">景观亮化、楼宇照明</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 产品4 -->
+                        <div class="product-card bg-light rounded-xl overflow-hidden border border-gray-100">
+                            <div class="h-48 product-image-container relative">
+                                <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/code_assistant/932b661ffddb43cbb408e5554a822a58~tplv-a9rns2rl98-image.image?rcl=2025081215564052B8BF626EB99FA8B733&amp;rk3s=8e244e95&amp;rrcfp=2609e108&amp;x-expires=1755590204&amp;x-signature=m2cSlCUXQ8mDXEwoPCsW4uleUCM%3D" alt="RF射频控制器" class="">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-medium text-base mb-1" data-i18n="product4">RF射频控制器</h4>
+                                <p class="text-xs text-gray-600 mb-2" data-i18n="product4Desc">远程控制距离可达50米，穿墙能力强，多场景模式</p>
+                                <div class="flex items-center text-xs text-gray-500">
+                                    <i class="fa fa-map-marker mr-1"></i>
+                                    <span data-i18n="product4App">户外照明、工业控制</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 产品链接卡片 - 位于产品案例最下方 -->
+                        <div class="product-card bg-light rounded-xl overflow-hidden border border-gray-100 sm:col-span-2">
+                            <a href="https://flbook.com.cn/c/g7PfxOUZ2f" target="_blank" rel="noopener noreferrer">
+                                <div class="h-48 product-image-container relative">
+                                    <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/code_assistant/1ad2eb13301649319587d7692f521e22~tplv-a9rns2rl98-image.image?rcl=2025081215531470147DA24F197C182A36&amp;rk3s=8e244e95&amp;rrcfp=2609e108&amp;x-expires=1755589998&amp;x-signature=sUKdFsaDN8gNKGvbyagWwmPl%2BvI%3D" alt="产品目录" class="">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
+                                        <div class="p-4 text-white w-full text-center">
+                                            <span class="bg-accent/90 px-3 py-1 rounded-full text-sm font-medium">
+                                                <i class="fa fa-external-link mr-1"></i>查看详情
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <h4 class="font-medium text-base mb-1" data-i18n="product5">产品电子目录</h4>
+                                    <p class="text-xs text-gray-600 mb-2" data-i18n="product5Desc">浏览完整产品系列及详细参数</p>
+                                    <div class="flex items-center text-xs text-gray-500">
+                                        <i class="fa fa-globe mr-1"></i>
+                                        <span data-i18n="product5App">在线查看、下载保存</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 联系按钮 - 增强版带设备感知功能 -->
+                <div class="mt-8 text-center section-fade-in delay-500">
+                    <button id="smartCallButton" class="inline-flex items-center px-6 py-3 bg-accent text-white rounded-full font-medium shadow-md hover:bg-accent/90 transform hover:-translate-y-1 transition-all duration-300 btn-ripple btn-pulse">
+                        <i class="fa fa-phone mr-2"></i>
+                        <span id="callButtonText" data-i18n="contactBtn">立即联系</span>
+                    </button>
+                    
+                    <!-- 二维码区域 - 仅在桌面显示 -->
+                    <div class="qr-container">
+                        <p class="text-sm text-gray-500 mt-2" data-i18n="scanQr">手机扫码快速联系</p>
+                        <div class="inline-block bg-white p-2 rounded shadow mt-2">
+                            <div class="w-32 h-32 bg-gray-100 flex items-center justify-center">
+                                <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/code_assistant/4d58482888bc41cfb539a68b57cc45a0~tplv-a9rns2rl98-image.image?rcl=20250812160748899AE8764FE7888D5312&amp;rk3s=8e244e95&amp;rrcfp=e75484ac&amp;x-expires=1755590868&amp;x-signature=3kqqk0tnQJiwQGyX4jJR8ft95kE%3D" alt="联系二维码" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 页脚 - 适配移动端字体大小 -->
+        <footer class="mt-4 mb-6 text-center text-gray-500 text-xs md:text-sm">
+            <p data-i18n="footer">© 2023 LED控制器专家网络名片 | 专业·高效·创新</p>
+        </footer>
+    </div>
+
+    <script>
+        // 电话号码
+        const phoneNumber = "+8618816761182";
+        const phoneNumberPlain = "18816761182";
+        const emailAddress = "909323609@qq.com";
+        const wechatId = "eku559";
+        
+        // 多语言数据
+        const translations = {
+            zh: {
+                name: "肖跃武",
+                title: "LED智能控制系统专家",
+                tag1: "智能照明",
+                tag2: "控制器开发",
+                tag3: "系统集成",
+                about: "关于我",
+                aboutText: "拥有12年LED控制系统研发与应用经验，专注于智能照明解决方案设计、LED控制器软硬件开发及系统集成。曾主导多个大型商业照明项目，擅长根据客户需求定制高效、稳定的LED控制方案。",
+                expertise: "专业领域",
+                field1: "LED控制器开发",
+                field1Desc: "红外、RF433、蓝牙、WiFi等多种协议控制器",
+                field2: "智能控制系统",
+                field2Desc: "手机APP、语音控制、场景联动",
+                field3: "照明方案设计",
+                field3Desc: "商业、工业、景观照明解决方案",
+                field4: "技术咨询服务",
+                field4Desc: "项目评估、技术指导、问题诊断",
+                projectExp: "项目经验分布",
+                contact: "联系方式",
+                phone: "电话",
+                email: "邮箱",
+                address: "地址",
+                addressText: "深圳市鑫昱智能电子科技有限公司",
+                wechat: "微信",
+                footer: "© 2023 LED控制器专家网络名片 | 专业·高效·创新",
+                chartLabels: ["商业照明", "工业控制", "景观亮化", "智能家居", "其他项目"],
+                products: "产品案例",
+                product1: "WiFi智能LED控制器",
+                product1Desc: "支持手机APP远程控制，兼容Alexa和Google Assistant",
+                product1App: "商业照明、智能家居",
+                product2: "红外智能控制器",
+                product2Desc: "专业迷你灯光控制，操作简单，迷你小巧",
+                product2App: "商业美化、应用广泛",
+                product3: "蓝牙Mesh控制器",
+                product3Desc: "自组网技术，支持上千节点，低功耗设计",
+                product3App: "景观亮化、楼宇照明",
+                product4: "RF射频控制器",
+                product4Desc: "远程控制距离可达50米，穿墙能力强，多场景模式",
+                product4App: "户外照明、工业控制",
+                product5: "产品电子目录",
+                product5Desc: "浏览完整产品系列及详细参数",
+                product5App: "在线查看、下载保存",
+                contactBtn: "立即联系",
+                scanQr: "手机扫码快速联系",
+                scanAddWechat: "扫码添加微信",
+                callSuccess: "正在拨打电话...",
+                copiedPhone: "电话号码已复制",
+                copiedWechat: "微信号已复制",
+                callFailed: "拨号失败，请手动拨打",
+                emailSuccess: "正在打开邮件客户端..."
+            },
+            en: {
+                name: "Xiao Yuewu",
+                title: "LED Intelligent Control System Expert",
+                tag1: "Smart Lighting",
+                tag2: "Controller Development",
+                tag3: "System Integration",
+                about: "About Me",
+                aboutText: "With 12 years of experience in R&D and application of LED control systems, specializing in intelligent lighting solution design, LED controller hardware and software development, and system integration. Has led multiple large commercial lighting projects, skilled in customizing efficient and stable LED control solutions according to customer needs.",
+                expertise: "Areas of Expertise",
+                field1: "LED Controller Development",
+                field1Desc: "Infrared, RF433, Bluetooth, WiFi and other protocol controllers",
+                field2: "Intelligent Control Systems",
+                field2Desc: "Mobile APP, voice control, scene linkage",
+                field3: "Lighting Scheme Design",
+                field3Desc: "Commercial, industrial, landscape lighting solutions",
+                field4: "Technical Consulting Services",
+                field4Desc: "Project evaluation, technical guidance, problem diagnosis",
+                projectExp: "Project Experience Distribution",
+                contact: "Contact Information",
+                phone: "Phone",
+                email: "Email",
+                address: "Address",
+                addressText: "Shenzhen Xinyu Intelligent Electronics Technology Co., Ltd.",
+                wechat: "WeChat",
+                footer: "© 2023 LED Controller Expert Business Card | Professional·Efficient·Innovative",
+                chartLabels: ["Commercial Lighting", "Industrial Control", "Landscape Lighting", "Smart Home", "Other Projects"],
+                products: "Product Cases",
+                product1: "WiFi Smart LED Controller",
+                product1Desc: "Supports remote control via mobile APP, compatible with Alexa and Google Assistant",
+                product1App: "Commercial Lighting, Smart Home",
+                product2: "Infrared Smart Controller",
+                product2Desc: "Professional mini light control, easy to operate, compact size",
+                product2App: "Commercial beautification, widely used",
+                product3: "Bluetooth Mesh Controller",
+                product3Desc: "Self-networking technology, supports thousands of nodes, low-power design",
+                product3App: "Landscape Lighting, Building Lighting",
+                product4: "RF Controller",
+                product4Desc: "Remote control distance up to 50 meters, strong wall penetration, multiple scene modes",
+                product4App: "Outdoor Lighting, Industrial Control",
+                product5: "Product Electronic Catalog",
+                product5Desc: "Browse complete product series and detailed parameters",
+                product5App: "View online, download and save",
+                contactBtn: "Contact Now",
+                scanQr: "Scan QR code to contact quickly",
+                scanAddWechat: "Scan to add WeChat",
+                callSuccess: "Calling now...",
+                copiedPhone: "Phone number copied",
+                copiedWechat: "WeChat ID copied",
+                callFailed: "Call failed, please dial manually",
+                emailSuccess: "Opening email client..."
+            },
+            ja: {
+                name: "肖躍武",
+                title: "LEDインテリジェント制御システム専門家",
+                tag1: "スマート照明",
+                tag2: "コントローラ開発",
+                tag3: "システム統合",
+                about: "自分について",
+                aboutText: "LED制御システムの研究開発と応用に12年の経験があり、スマート照明ソリューションの設計、LEDコントローラのハードウェアとソフトウェアの開発、システム統合に専念しています。複数の大規模商業照明プロジェクトを主導した経験があり、顧客のニーズに応じて効率的で安定したLED制御ソリューションをカスタマイズするのが得意です。",
+                expertise: "専門分野",
+                field1: "LEDコントローラ開発",
+                field1Desc: "赤外線、RF433、Bluetooth、WiFiなど多種類のプロトコルコントローラ",
+                field2: "インテリジェント制御システム",
+                field2Desc: "スマホAPP、音声制御、シーン連動",
+                field3: "照明方案設計",
+                field3Desc: "商業、工業、景観照明ソリューション",
+                field4: "技術コンサルティングサービス",
+                field4Desc: "プロジェクト評価、技術指導、問題診断",
+                projectExp: "プロジェクト経験分布",
+                contact: "連絡先",
+                phone: "電話",
+                email: "メール",
+                address: "住所",
+                addressText: "深セン市鑫昱インテリジェント電子科技有限公司",
+                wechat: "微信",
+                footer: "© 2023 LEDコントローラ専門家ネットワーク名刺 | 専門的·効率的·革新的",
+                chartLabels: ["商業照明", "産業制御", "景観ライトアップ", "スマートホーム", "その他のプロジェクト"],
+                products: "製品事例",
+                product1: "WiFiスマートLEDコントローラ",
+                product1Desc: "スマホAPPによるリモートコントロールに対応、AlexaとGoogle Assistantと互換性があります",
+                product1App: "商業照明、スマートホーム",
+                product2: "赤外線スマートコントローラ",
+                product2Desc: "専門的なミニライトコントロール、操作が簡単、小型でコンパクト",
+                product2App: "商業美化、幅広く応用",
+                product3: "Bluetooth Meshコントローラ",
+                product3Desc: "自組織網技術、数千ノードをサポート、低消費電力設計",
+                product3App: "景観ライトアップ、ビル照明",
+                product4: "RF無線コントローラ",
+                product4Desc: "リモートコントロール距離は50メートルまで、壁を貫通する能力が強く、複数のシーンモード",
+                product4App: "屋外照明、産業制御",
+                product5: "製品電子カタログ",
+                product5Desc: "完全な製品シリーズと詳細なパラメータを閲覧",
+                product5App: "オンライン表示、ダウンロードして保存",
+                contactBtn: "すぐに連絡",
+                scanQr: "携帯でQRコードをスキャンしてすばやく連絡",
+                scanAddWechat: "QRコードをスキャンして微信を追加",
+                callSuccess: "電話をかけています...",
+                copiedPhone: "電話番号がコピーされました",
+                copiedWechat: "WeChat IDがコピーされました",
+                callFailed: "通話に失敗しました。手動でダイヤルしてください",
+                emailSuccess: "メールクライアントを開いています..."
+            },
+            ko: {
+                // 韩语翻译...
+                product5: "제품 전자 카탈로그",
+                product5Desc: "전체 제품 시리즈 및 상세 매개변수 브라우징",
+                product5App: "온라인 보기, 다운로드 및 저장",
+                scanAddWechat: "QR 코드를 스캔하여 위챗 추가"
+            },
+            de: {
+                // 德语翻译...
+                product5: "Produkt-Elektrokatalog",
+                product5Desc: "Durchsuchen Sie die vollständige Produktreihe und detaillierte Parameter",
+                product5App: "Online anzeigen, herunterladen und speichern",
+                scanAddWechat: "QR-Code scannen, um WeChat hinzuzufügen"
+            }
+        };
+        
+        // 初始化图表
+        function initChart() {
+            const ctx = document.getElementById('projectChart').getContext('2d');
+            const currentLang = document.querySelector('.lang-option.active')?.dataset.lang || 'zh';
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: translations[currentLang].chartLabels,
+                    datasets: [{
+                        data: [35, 25, 20, 15, 5],
+                        backgroundColor: [
+                            '#0F4C81',
+                            '#36B37E',
+                            '#FF5630',
+                            '#FFAB00',
+                            '#6554C0'
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%',
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    }
+                }
+            });
+        }
+        
+        // 显示提示框
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+        
+        // 切换语言
+        function setupLanguageSwitcher() {
+            const langOptions = document.querySelectorAll('.lang-option');
+            
+            // 设置默认语言为中文
+            document.querySelector('[data-lang="zh"]').classList.add('active');
+            
+            langOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    // 移除所有活跃状态
+                    langOptions.forEach(opt => opt.classList.remove('active'));
+                    // 设置当前选项为活跃
+                    option.classList.add('active');
+                    
+                    const lang = option.dataset.lang;
+                    // 更新页面文本
+                    document.querySelectorAll('[data-i18n]').forEach(element => {
+                        const key = element.dataset.i18n;
+                        if (translations[lang] && translations[lang][key]) {
+                            element.textContent = translations[lang][key];
+                        }
+                    });
+                    
+                    // 重新初始化图表以更新语言
+                    initChart();
+                });
+            });
+        }
+        
+        // 设置联系方式交互
+        function setupContactInteractions() {
+            // 电话号码点击复制
+            document.getElementById('phoneContact').addEventListener('click', () => {
+                navigator.clipboard.writeText(phoneNumberPlain)
+                    .then(() => {
+                        const currentLang = document.querySelector('.lang-option.active')?.dataset.lang || 'zh';
+                        showToast(translations[currentLang].copiedPhone);
+                    })
+                    .catch(err => {
+                        console.error('复制失败: ', err);
+                    });
+            });
+            
+            // 邮箱点击
+            document.getElementById('emailContact').addEventListener('click', () => {
+                const currentLang = document.querySelector('.lang-option.active')?.dataset.lang || 'zh';
+                window.location.href = `mailto:${emailAddress}`;
+                showToast(translations[currentLang].emailSuccess);
+            });
+            
+            // 微信号点击复制
+            document.getElementById('wechatContact').addEventListener('click', (e) => {
+                // 检查点击的是否是二维码区域，如果是则不执行复制操作
+                if (!e.target.closest('.wechat-qr-container')) {
+                    navigator.clipboard.writeText(wechatId)
+                        .then(() => {
+                            const currentLang = document.querySelector('.lang-option.active')?.dataset.lang || 'zh';
+                            showToast(translations[currentLang].copiedWechat);
+                        })
+                        .catch(err => {
+                            console.error('复制失败: ', err);
+                        });
+                }
+            });
+            
+            // 智能呼叫按钮
+            document.getElementById('smartCallButton').addEventListener('click', () => {
+                const currentLang = document.querySelector('.lang-option.active')?.dataset.lang || 'zh';
+                // 检测是否是移动设备
+                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                    // 移动设备尝试直接拨号
+                    try {
+                        window.location.href = `tel:${phoneNumber}`;
+                        showToast(translations[currentLang].callSuccess);
+                    } catch (err) {
+                        showToast(translations[currentLang].callFailed);
+                    }
+                } else {
+                    // 桌面设备复制电话号码
+                    navigator.clipboard.writeText(phoneNumberPlain)
+                        .then(() => {
+                            showToast(translations[currentLang].copiedPhone);
+                        })
+                        .catch(err => {
+                            console.error('复制失败: ', err);
+                        });
+                }
+            });
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            setupLanguageSwitcher();
+            setupContactInteractions();
+            initChart();
+            
+            // 为产品卡片添加动画延迟，错开显示
+            const productCards = document.querySelectorAll('.product-card');
+            productCards.forEach((card, index) => {
+                card.style.animationDelay = `${100 * (index % 4)}ms`;
+            });
+        });
+    </script>
+
+
+
+    </body></html>
