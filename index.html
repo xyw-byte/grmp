@@ -268,6 +268,7 @@
             border-radius: 10px;
             background: var(--icon-bg);
             transition: transform 0.3s;
+            cursor: pointer;
         }
 
         .contact-item:hover {
@@ -278,6 +279,16 @@
             color: var(--primary-color);
             font-size: 18px;
             width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .contact-text {
+            flex: 1;
+            text-align: left;
         }
 
         .info-card {
@@ -465,6 +476,14 @@
             text-decoration: none;
             transition: all 0.3s ease;
             font-size: 18px;
+            /* 新增样式确保图标容器稳定 */
+            position: relative;
+        }
+
+        /* 关键修复：确保微信图标在圆形中居中 */
+        .social-link i.fab.fa-weixin {
+            position: relative;
+            left: 1px; /* 微调微信图标位置 */
         }
 
         .social-link:hover {
@@ -660,7 +679,7 @@
                 <span class="badge en">Technical Expert</span>
                 <span class="badge zh">技术专家</span>
                 
-                <img src="1111.jpg" " alt="肖跃武" class="profile-img">
+                <img src="1111.jpg" alt="肖跃武" class="profile-img">
                 <h2 class="profile-name">肖跃武 / Xiao Yuewu</h2>
                 <p class="profile-title en">Wireless Control Systems Specialist</p>
                 <p class="profile-title zh">无线控制系统专家</p>
@@ -670,25 +689,25 @@
                 <div class="led-effect"></div>
                 
                 <div class="contact-info">
-                    <div class="contact-item">
+                    <div class="contact-item" onclick="window.location.href='tel:+8618816761182'">
                         <i class="fas fa-phone contact-icon"></i>
-                        <span>+86 18816761182</span>
+                        <span class="contact-text">+86 18816761182</span>
                         <button class="copy-btn" data-text="+8618816761182"><i class="fas fa-copy"></i></button>
                     </div>
-                    <div class="contact-item">
+                    <div class="contact-item" onclick="window.location.href='mailto:909323609@qq.com'">
                         <i class="fas fa-envelope contact-icon"></i>
-                        <span>909323609@qq.com</span>
+                        <span class="contact-text">909323609@qq.com</span>
                         <button class="copy-btn" data-text="909323609@qq.com"><i class="fas fa-copy"></i></button>
                     </div>
-                    <div class="contact-item">
+                    <div class="contact-item" onclick="copyWeChat()">
                         <i class="fab fa-weixin contact-icon"></i>
-                        <span>EKU559</span>
+                        <span class="contact-text">EKU559</span>
                         <button class="copy-btn" data-text="EKU559"><i class="fas fa-copy"></i></button>
                     </div>
-                    <div class="contact-item">
+                    <div class="contact-item" onclick="window.open('https://maps.baidu.com/search/深圳市鑫昱智能电子科技有限公司','_blank')">
                         <i class="fas fa-map-marker-alt contact-icon"></i>
-                        <span class="en">Shenzhen Xinyu Intelligent Electronics Technology Co., Ltd.</span>
-                        <span class="zh">深圳市鑫昱智能电子科技有限公司</span>
+                        <span class="contact-text en">Shenzhen Xinyu Intelligent Electronics Technology Co., Ltd.</span>
+                        <span class="contact-text zh">深圳市鑫昱智能电子科技有限公司</span>
                     </div>
                 </div>
 
@@ -942,7 +961,10 @@
             // 复制功能
             const copyButtons = document.querySelectorAll('.copy-btn');
             copyButtons.forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function(e) {
+                    // 阻止事件冒泡，避免触发父元素的点击事件
+                    e.stopPropagation();
+                    
                     const text = this.getAttribute('data-text');
                     copyToClipboard(text);
                     
@@ -956,20 +978,29 @@
             });
             
             function copyToClipboard(text) {
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
+                navigator.clipboard.writeText(text).then(() => {
+                    console.log('Text copied to clipboard');
+                }).catch(err => {
+                    console.error('Could not copy text: ', err);
+                    // 备用方法
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                });
             }
             
             // 复制微信号功能
             window.copyWeChat = function() {
                 copyToClipboard('EKU559');
-                alert('微信号 EKU559 已复制到剪贴板');
+                // 根据当前语言显示相应的提示
+                const isZh = document.querySelector('.lang-btn[data-lang="zh"].active') !== null;
+                alert(isZh ? '微信号 EKU559 已复制到剪贴板' : 'WeChat ID EKU559 copied to clipboard');
             }
         });
     </script>
 </body>
 </html>
+    
