@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人体感应技术 - 肖跃武 LED控制技术专家</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #0aabf0;
+            --secondary-color: #00ff8c;
+            --accent-color: #ff00d6;
+            --dark-bg: #0a0e17;
+            --light-bg: #f0f4f8;
+            --card-bg-dark: rgba(15, 23, 42, 0.9);
+            --card-bg-light: rgba(255, 255, 255, 0.95);
+            --text-dark: #e2e8f0;
+            --text-light: #2d3748;
+            --shadow-dark: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --shadow-light: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --ir-color: #ff3e3e;
+            --rf-color: #3e7dff;
+            --bluetooth-color: #2d5aff;
+            --wifi-color: #00c853;
+            --motion-color: #ff9800; /* 人体感应专属橙色系 */
+        }
+
+        .dark-theme {
+            --bg: var(--dark-bg);
+            --card-bg: var(--card-bg-dark);
+            --text-color: var(--text-dark);
+            --shadow: var(--shadow-dark);
+            --icon-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        .light-theme {
+            --bg: var(--light-bg);
+            --card-bg: var(--card-bg-light);
+            --text-color: var(--text-light);
+            --shadow: var(--shadow-light);
+            --icon-bg: rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s, color 0.3s, transform 0.3s;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 20px;
+            position: relative;
+        }
+
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            z-index: 1;
+            position: relative;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #2c3e50;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .language-switcher {
+            display: flex;
+            gap: 10px;
+            background: var(--card-bg);
+            padding: 5px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .lang-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn.active {
+            background: var(--primary-color);
+            color: #000;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-color);
+            text-decoration: none;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--secondary-color);
+            transform: translateX(-5px);
+        }
+
+        /* 技术头部区域 */
+        .tech-header {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(128, 128, 128, 0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .tech-icon-large {
+            font-size: 80px;
+            color: var(--motion-color);
+            text-shadow: 0 0 20px rgba(255, 152, 0, 0.5);
+            padding: 20px;
+            background: var(--icon-bg);
+            border-radius: 50%;
+            min-width: 140px;
+            text-align: center;
+        }
+
+        .tech-header-content {
+            flex: 1;
+        }
+
+        .tech-title {
+            font-size: 32px;
+            margin-bottom: 15px;
+            color: var(--motion-color);
+        }
+
+        .tech-subtitle {
+            font-size: 18px;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+
+        .tech-description {
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .tech-nav {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tech-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--icon-bg);
+            border-radius: 30px;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .tech-nav-item:hover {
+            background: rgba(255, 152, 0, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .tech-nav-item.active {
+            background: var(--motion-color);
+            color: #fff;
+        }
+
+        /* LED脉冲效果 */
+        .led-effect {
+            height: 4px;
+            background: linear-gradient(90deg, var(--motion-color), #ffc107);
+            border-radius: 2px;
+            margin: 20px 0;
+            box-shadow: 0 0 10px var(--motion-color),
+                        0 0 20px var(--motion-color);
+            animation: pulse 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; box-shadow: 0 0 10px var(--motion-color), 0 0 20px var(--motion-color); }
+            100% { opacity: 1; box-shadow: 0 0 15px var(--motion-color), 0 0 30px var(--motion-color), 0 0 45px var(--motion-color); }
+        }
+
+        /* 人体感应演示区域 */
+        .sensor-demo {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .demo-title {
+            font-size: 20px;
+            margin-bottom: 25px;
+            color: var(--motion-color);
+        }
+
+        .demo-area {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 300px;
+            margin: 0 auto;
+            background: var(--icon-bg);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .sensor {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, var(--motion-color), #e65100);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+            box-shadow: 0 0 20px var(--motion-color);
+            z-index: 2;
+        }
+
+        .detection-area {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 150px solid transparent;
+            border-right: 150px solid transparent;
+            border-top: 200px solid rgba(255, 152, 0, 0.2);
+            border-radius: 50%;
+            transition: all 0.5s ease;
+            z-index: 1;
+        }
+
+        .person {
+            position: absolute;
+            bottom: 40px;
+            left: 100px;
+            width: 50px;
+            height: 100px;
+            transition: all 3s ease-in-out;
+            z-index: 3;
+        }
+
+        .person-icon {
+            font-size: 50px;
+            color: var(--text-color);
+        }
+
+        .demo-light {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 152, 0, 0.3), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        .demo-light.on {
+            opacity: 1;
+        }
+
+        .demo-status {
+            margin-top: 20px;
+            font-size: 16px;
+            padding: 10px;
+            border-radius: 10px;
+            background: var(--icon-bg);
+            display: inline-block;
+        }
+
+        .demo-controls {
+            margin-top: 20px;
+        }
+
+        .demo-btn {
+            background: var(--icon-bg);
+            border: 2px solid var(--motion-color);
+            color: var(--motion-color);
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .demo-btn:hover {
+            background: rgba(255, 152, 0, 0.1);
+        }
+
+        .demo-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 内容网格布局 */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .info-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(128, 128, 128, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--motion-color);
+        }
+
+        .section-title {
+            font-size: 22px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            color: var(--motion-color);
+        }
+
+        /* 技术规格列表 */
+        .spec-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .spec-item {
+            background: var(--icon-bg);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .spec-label {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: var(--motion-color);
+        }
+
+        .spec-value {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* 核心特性列表 */
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .feature-item {
+            display: flex;
+            gap: 15px;
+        }
+
+        .feature-icon {
+            color: var(--motion-color);
+            margin-top: 3px;
+            flex-shrink: 0;
+        }
+
+        .feature-content {
+            flex: 1;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .feature-desc {
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        /* 应用场景卡片 */
+        .application-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .application-card {
+            background: var(--icon-bg);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .application-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+
+        .application-icon {
+            color: var(--motion-color);
+            font-size: 30px;
+            margin-bottom: 15px;
+        }
+
+        .application-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .application-desc {
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        /* 特色项目展示 */
+        .project-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .project-item {
+            background: var(--icon-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .project-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+
+        .project-img {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(45deg, var(--motion-color), #ffc107);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .project-content {
+            padding: 20px;
+        }
+
+        .project-title {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .project-desc {
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        /* 页脚样式 */
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            border-top: 1px solid rgba(128, 128, 128, 0.2);
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 30px;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .social-link {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--icon-bg);
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+
+        .social-link:hover {
+            background: var(--primary-color);
+            color: #000;
+            transform: translateY(-5px) scale(1.1);
+        }
+
+        /* 提示框样式 */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 140px;
+            background-color: var(--primary-color);
+            color: #000;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -70px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-weight: bold;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--primary-color) transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tech-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .tech-nav {
+                justify-content: center;
+            }
+
+            .demo-area {
+                height: 250px;
+            }
+
+            .detection-area {
+                border-left: 120px solid transparent;
+                border-right: 120px solid transparent;
+                border-top: 180px solid rgba(255, 152, 0, 0.2);
+            }
+        }
+
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .spec-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .application-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .project-showcase {
+                grid-template-columns: 1fr;
+            }
+
+            .demo-area {
+                height: 200px;
+            }
+
+            .detection-area {
+                border-left: 90px solid transparent;
+                border-right: 90px solid transparent;
+                border-top: 150px solid rgba(255, 152, 0, 0.2);
+            }
+
+            .demo-btn {
+                margin: 5px;
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div id="particles-js"></div>
+    
+    <div class="container">
+        <header>
+            <a href="index.html" class="logo">
+                <i class="fas fa-lightbulb"></i>
+                <span class="en">LED Control Specialist</span>
+                <span class="zh">LED控制专家</span>
+            </a>
+            
+            <div class="controls">
+                <label class="theme-switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+                
+                <div class="language-switcher">
+                    <button class="lang-btn active" data-lang="zh">中文</button>
+                    <button class="lang-btn" data-lang="en">English</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 返回首页链接 -->
+        <a href="index.html" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            <span class="en">Back to homepage</span>
+            <span class="zh">返回首页</span>
+        </a>
+
+        <!-- 技术头部介绍 -->
+        <div class="tech-header">
+            <div class="tech-icon-large">
+                <i class="fas fa-user-clock"></i>
+            </div>
+            <div class="tech-header-content">
+                <h1 class="tech-title">
+                    <span class="en">Motion Sensor Control Technology</span>
+                    <span class="zh">人体感应控制技术</span>
+                </h1>
+                <p class="tech-subtitle">
+                    <span class="en">Intelligent LED control based on human presence detection</span>
+                    <span class="zh">基于人体存在检测的智能LED控制方案</span>
+                </p>
+                <p class="tech-description en">
+                    Motion sensor technology enables automatic LED lighting control by detecting human movement and presence. Our solutions integrate PIR (Passive Infrared) and microwave sensing technologies, providing high accuracy, low power consumption, and energy-saving benefits for both residential and commercial applications.
+                </p>
+                <p class="tech-description zh">
+                    人体感应技术通过检测人体活动与存在，实现LED照明的自动控制。我们的方案融合了被动红外（PIR）与微波感应技术，具备高检测精度、低功耗特性，为住宅与商业场景提供节能高效的照明控制方案。
+                </p>
+                
+                <!-- 技术导航 -->
+                <div class="tech-nav">
+                    <a href="#" class="tech-nav-item active">
+                        <i class="fas fa-info-circle"></i>
+                        <span class="en">Overview</span>
+                        <span class="zh">概述</span>
+                    </a>
+                    <a href="#" class="tech-nav-item">
+                        <i class="fas fa-cogs"></i>
+                        <span class="en">Specifications</span>
+                        <span class="zh">技术规格</span>
+                    </a>
+                    <a href="#" class="tech-nav-item">
+                        <i class="fas fa-project-diagram"></i>
+                        <span class="en">Applications</span>
+                        <span class="zh">应用场景</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- LED脉冲分隔线 -->
+        <div class="led-effect"></div>
+
+        <!-- 人体感应交互演示 -->
+        <div class="sensor-demo">
+            <h3 class="demo-title">
+                <span class="en">Motion Sensor Interactive Demo</span>
+                <span class="zh">人体感应交互演示</span>
+            </h3>
+            
+            <div class="demo-area">
+                <div class="sensor">
+                    <i class="fas fa-radiation-alt"></i>
+                </div>
+                <div class="detection-area"></div>
+                <div class="person">
+                    <i class="fas fa-user person-icon"></i>
+                </div>
+                <div class="demo-light" id="demoLight"></div>
+            </div>
+            
+            <div class="demo-status" id="demoStatus">
+                <span class="en">No motion detected - lights off</span>
+                <span class="zh">未检测到人体 - 灯光关闭</span>
+            </div>
+            
+            <div class="demo-controls">
+                <button class="demo-btn" id="startDemo">
+                    <span class="en">Start Demo</span>
+                    <span class="zh">开始演示</span>
+                </button>
+                <button class="demo-btn" id="resetDemo">
+                    <span class="en">Reset</span>
+                    <span class="zh">重置</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 核心内容区域 -->
+        <div class="content-grid">
+            <!-- 技术规格卡片 -->
+            <div class="info-card">
+                <h3 class="section-title">
+                    <i class="fas fa-microchip section-icon"></i>
+                    <span class="en">Technical Specifications</span>
+                    <span class="zh">技术规格</span>
+                </h3>
+                
+                <div class="spec-list">
+                    <div class="spec-item">
+                        <div class="spec-label en">Sensing Technology</div>
+                        <div class="spec-label zh">感应技术</div>
+                        <div class="spec-value">PIR + Microwave (Dual-tech), PIR Single-tech</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label en">Operating Voltage</div>
+                        <div class="spec-label zh">工作电压</div>
+                        <div class="spec-value">DC 12V-24V / AC 110V-220V</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label en">Detection Range</div>
+                        <div class="spec-label zh">检测距离</div>
+                        <div class="spec-value">Up to 10 meters (adjustable 3-10m)</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label en">Detection Angle</div>
+                        <div class="spec-label zh">检测角度</div>
+                        <div class="spec-value">120° (Horizontal), 90° (Vertical)</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label en">Delay Time</div>
+                        <div class="spec-label zh">延时时间</div>
+                        <div class="spec-value">5s-5min (adjustable)</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label en">Lux Level</div>
+                        <div class="spec-label zh">光照灵敏度</div>
+                        <div class="spec-value">0-2000LUX (adjustable, support dark-only mode)</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label en">Operating Temperature</div>
+                        <div class="spec-label zh">工作温度</div>
+                        <div class="spec-value">-20°C to +60°C</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label en">Power Consumption</div>
+                        <div class="spec-label zh">功耗</div>
+                        <div class="spec-value">Static: <0.5W, Working: <2W</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 核心特性卡片 -->
+            <div class="info-card">
+                <h3 class="section-title">
+                    <i class="fas fa-star section-icon"></i>
+                    <span class="en">Key Features</span>
+                    <span class="zh">核心特性</span>
+                </h3>
+                
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <i class="fas fa-shield-alt feature-icon"></i>
+                        <div class="feature-content">
+                            <div class="feature-title en">Dual-tech Sensing</div>
+                            <div class="feature-title zh">双技术感应</div>
+                            <div class="feature-desc en">Combines PIR (heat detection) and microwave (motion detection) to reduce false triggers from pets, sunlight, and environmental interference.</div>
+                            <div class="feature-desc zh">融合被动红外（热量检测）与微波（运动检测）技术，减少宠物、阳光及环境干扰导致的误触发。</div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-bolt feature-icon"></i>
+                        <div class="feature-content">
+                            <div class="feature-title en">Energy Saving</div>
+                            <div class="feature-title zh">节能高效</div>
+                            <div class="feature-desc en">Automatic on/off control based on human presence, reducing energy consumption by 60%-80% compared to manual control.</div>
+                            <div class="feature-desc zh">根据人体存在自动开关控制，相比手动控制降低60%-80%能耗。</div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-sliders-h feature-icon"></i>
+                        <div class="feature-content">
+                            <div class="feature-title en">Full Parameter Adjustment</div>
+                            <div class="feature-title zh">全参数可调</div>
+                            <div class="feature-desc en">Adjustable detection range, delay time, and lux level to meet different application scenarios and user requirements.</div>
+                            <div class="feature-desc zh">检测距离、延时时间、光照灵敏度全参数可调，适配不同应用场景与用户需求。</div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-plug feature-icon"></i>
+                        <div class="feature-content">
+                            <div class="feature-title en">Easy Integration</div>
+                            <div class="feature-title zh">易集成性</div>
+                            <div class="feature-desc en">Support for direct connection with LED drivers, controllers, and smart home systems (compatible with 0-10V, DALI, and wireless protocols).</div>
+                            <div class="feature-desc zh">支持直接对接LED驱动、控制器及智能家居系统（兼容0-10V、DALI及无线协议）。</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 应用场景卡片 -->
+        <div class="info-card">
+            <h3 class="section-title">
+                <i class="fas fa-briefcase section-icon"></i>
+                <span class="en">Typical Applications</span>
+                <span class="zh">典型应用</span>
+            </h3>
+            
+            <div class="application-cards">
+                <div class="application-card">
+                    <div class="application-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="application-title en">Commercial Buildings</div>
+                    <div class="application-title zh">商业建筑</div>
+                    <div class="application-desc en">Automatic lighting control for corridors, stairwells, restrooms, and meeting rooms to save energy and improve convenience.</div>
+                    <div class="application-desc zh">用于走廊、楼梯间、卫生间、会议室的自动照明控制，节能且提升使用便利性。</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="application-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="application-title en">Residential Areas</div>
+                    <div class="application-title zh">住宅区域</div>
+                    <div class="application-desc en">Smart lighting for garages, hallways, balconies, and bathrooms, providing hands-free automatic control.</div>
+                    <div class="application-desc zh">用于车库、玄关、阳台、卫生间的智能照明，实现免手动自动控制。</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="application-icon">
+                        <i class="fas fa-hospital"></i>
+                    </div>
+                    <div class="application-title en">Public Facilities</div>
+                    <div class="application-title zh">公共设施</div>
+                    <div class="application-desc en">Energy-saving lighting solutions for subway stations, airports, parks, and public toilets with high traffic flow.</div>
+                    <div class="application-desc zh">用于地铁站、机场、公园、公共卫生间等高人流场景的节能照明方案。</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="application-icon">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                    <div class="application-title en">Industrial Zones</div>
+                    <div class="application-title zh">工业区域</div>
+                    <div class="application-desc en">Safety lighting control for factory workshops, warehouses, and loading docks, activating only when personnel are present.</div>
+                    <div class="application-desc zh">用于工厂车间、仓库、装卸区的安全照明控制，仅在人员在场时启动。</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 特色项目展示 -->
+        <div class="info-card">
+            <h3 class="section-title">
+                <i class="fas fa-project-diagram section-icon"></i>
+                <span class="en">Featured Projects</span>
+                <span class="zh">特色项目</span>
+            </h3>
+            
+            <div class="project-showcase">
+                <div class="project-item">
+                    <div class="project-img">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="project-content">
+                        <h4 class="project-title en">Office Building Corridor Lighting</h4>
+                        <h4 class="project-title zh">办公楼走廊照明系统</h4>
+                        <p class="project-desc en">Dual-tech motion sensor solution for 20-floor office building, reducing energy consumption by 72% and eliminating manual control needs.</p>
+                        <p class="project-desc zh">为20层办公楼打造的双技术人体感应方案，能耗降低72%，完全替代手动控制。</p>
+                    </div>
+                </div>
+                
+                <div class="project-item">
+                    <div class="project-img">
+                        <i class="fas fa-subway"></i>
+                    </div>
+                    <div class="project-content">
+                        <h4 class="project-title en">Subway Station Platform Lighting</h4>
+                        <h4 class="project-title zh">地铁站台照明系统</h4>
+                        <p class="project-desc en">High-sensitivity motion sensor network for subway platforms, automatically adjusting brightness based on passenger flow.</p>
+                        <p class="project-desc zh">为地铁站台设计的高灵敏度感应网络，可根据客流量自动调节照明亮度。</p>
+                    </div>
+                </div>
+                
+                <div class="project-item">
+                    <div class="project-img">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="project-content">
+                        <h4 class="project-title en">Smart Community Lighting</h4>
+                        <h4 class="project-title zh">智慧社区照明系统</h4>
+                        <p class="project-desc en">Integrated motion sensor + WiFi control solution for residential communities, combining automatic sensing and remote management.</p>
+                        <p class="project-desc zh">为住宅小区打造的感应+WiFi集成方案，兼具自动感应与远程管理功能。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <footer>
+            <p class="en">Specializing in advanced motion sensor LED control technologies</p>
+            <p class="zh">专注于先进的人体感应LED控制技术</p>
+            
+            <div class="social-links">
+                <a href="javascript:void(0);" class="social-link tooltip" onclick="copyWeChat()">
+                    <i class="fab fa-weixin"></i>
+                    <span class="tooltiptext en">WeChat: EKU559</span>
+                    <span class="tooltiptext zh">微信号: EKU559</span>
+                </a>
+                <a href="tel:+8618816761182" class="social-link tooltip">
+                    <i class="fas fa-phone"></i>
+                    <span class="tooltiptext en">Call: +86 18816761182</span>
+                    <span class="tooltiptext zh">电话: +86 18816761182</span>
+                </a>
+                <a href="mailto:909323609@qq.com" class="social-link tooltip">
+                    <i class="fas fa-envelope"></i>
+                    <span class="tooltiptext en">Email: 909323609@qq.com</span>
+                    <span class="tooltiptext zh">邮箱: 909323609@qq.com</span>
+                </a>
+                <a href="https://flbook.com.cn/c/g7PfxOUZ2f" class="social-link tooltip" target="_blank">
+                    <i class="fas fa-book-open"></i>
+                    <span class="tooltiptext en">Product Catalog</span>
+                    <span class="tooltiptext zh">产品目录</span>
+                </a>
+            </div>
+            
+            <p style="margin-top: 20px;">
+                <span class="en">© 2023 Xiao Yuewu - LED Control Technology Expert</span>
+                <span class="zh">© 2023 肖跃武 - LED控制技术专家</span>
+            </p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        // 初始化粒子背景
+        document.addEventListener('DOMContentLoaded', function() {
+            particlesJS('particles-js', {
+                particles: {
+                    number: { value: 80, density: { enable: true, value_area: 800 } },
+                    color: { value: "#ff9800" },
+                    shape: { type: "circle" },
+                    opacity: { value: 0.5, random: true },
+                    size: { value: 3, random: true },
+                    line_linked: {
+                        enable: true,
+                        distance: 150,
+                        color: "#ff9800",
+                        opacity: 0.4,
+                        width: 1
+                    },
+                    move: {
+                        enable: true,
+                        speed: 2,
+                        direction: "none",
+                        random: true,
+                        out_mode: "out"
+                    }
+                },
+                interactivity: {
+                    detect_on: "canvas",
+                    events: {
+                        onhover: { enable: true, mode: "repulse" },
+                        onclick: { enable: true, mode: "push" }
+                    }
+                }
+            });
+        });
+
+        // 主题切换功能
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('change', function() {
+            document.body.classList.toggle('dark-theme');
+            document.body.classList.toggle('light-theme');
+        });
+
+        // 语言切换功能
+        const langButtons = document.querySelectorAll('.lang-btn');
+        langButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const lang = this.getAttribute('data-lang');
+                
+                // 移除所有按钮的active类
+                langButtons.forEach(btn => btn.classList.remove('active'));
+                // 为当前按钮添加active类
+                this.classList.add('active');
+                
+                // 切换语言显示
+                document.querySelectorAll('.en, .zh').forEach(element => {
+                    if (element.classList.contains(lang)) {
+                        element.style.display = 'inline';
+                    } else {
+                        element.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // 默认显示中文
+        document.querySelectorAll('.en').forEach(el => {
+            el.style.display = 'none';
+        });
+
+        // 人体感应交互演示
+        const person = document.querySelector('.person');
+        const demoLight = document.getElementById('demoLight');
+        const demoStatus = document.getElementById('demoStatus');
+        const startDemoBtn = document.getElementById('startDemo');
+        const resetDemoBtn = document.getElementById('resetDemo');
+        let animationInterval;
+
+        function startDemo() {
+            // 禁用开始按钮，启用重置按钮
+            startDemoBtn.disabled = true;
+            resetDemoBtn.disabled = false;
+            
+            // 重置人物位置
+            person.style.left = '100px';
+            
+            // 开始动画
+            let position = 100;
+            let direction = 1; // 1表示向右，-1表示向左
+            
+            clearInterval(animationInterval);
+            animationInterval = setInterval(() => {
+                position += 2 * direction;
+                person.style.left = `${position}px`;
+                
+                // 检测是否到达边界
+                if (position >= 450) direction = -1;
+                if (position <= 100) direction = 1;
+                
+                // 检测是否在感应区域内
+                const personX = position + 25; // 人物中心X坐标
+                const personY = 140; // 人物中心Y坐标
+                
+                // 感应区域是一个三角形，检测人物是否在其中
+                const sensorX = 300; // 感应器中心X坐标
+                const sensorY = 60; // 感应器中心Y坐标
+                const areaLeft = sensorX - 150; // 感应区域左边界
+                const areaRight = sensorX + 150; // 感应区域右边界
+                
+                // 计算感应区域底边的Y坐标（根据三角形高度）
+                const areaBottomY = sensorY + 200;
+                
+                // 计算人物相对于感应器中心的角度
+                const dx = personX - sensorX;
+                const dy = personY - sensorY;
+                
+                // 计算人物是否在感应区域内
+                const inArea = (
+                    personY > sensorY && 
+                    personY < areaBottomY && 
+                    Math.abs(dx) < (areaBottomY - personY) * 150 / 200
+                );
+                
+                if (inArea) {
+                    demoLight.classList.add('on');
+                    demoStatus.innerHTML = '<span class="en">Motion detected - lights on</span><span class="zh">检测到人体活动 - 灯光开启</span>';
+                    demoStatus.style.color = 'var(--motion-color)';
+                } else {
+                    demoLight.classList.remove('on');
+                    demoStatus.innerHTML = '<span class="en">No motion detected - lights off</span><span class="zh">未检测到人体 - 灯光关闭</span>';
+                    demoStatus.style.color = '';
+                }
+                
+                // 根据当前语言设置显示
+                document.querySelectorAll('.lang-btn').forEach(btn => {
+                    if (btn.classList.contains('active')) {
+                        const lang = btn.getAttribute('data-lang');
+                        document.querySelectorAll('.en, .zh').forEach(element => {
+                            if (element.classList.contains(lang)) {
+                                element.style.display = 'inline';
+                            } else {
+                                element.style.display = 'none';
+                            }
+                        });
+                    }
+                });
+            }, 30);
+        }
+
+        function resetDemo() {
+            clearInterval(animationInterval);
+            person.style.left = '100px';
+            demoLight.classList.remove('on');
+            demoStatus.innerHTML = '<span class="en">No motion detected - lights off</span><span class="zh">未检测到人体 - 灯光关闭</span>';
+            demoStatus.style.color = '';
+            startDemoBtn.disabled = false;
+            resetDemoBtn.disabled = true;
+        }
+
+        startDemoBtn.addEventListener('click', startDemo);
+        resetDemoBtn.addEventListener('click', resetDemo);
+        resetDemoBtn.disabled = true;
+
+        // 复制微信号功能
+        function copyWeChat() {
+            navigator.clipboard.writeText("EKU559").then(() => {
+                alert("微信号已复制: EKU559");
+            }).catch(err => {
+                console.error('无法复制文本: ', err);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>触摸控制技术 - 肖跃武 LED控制技术专家</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #0aabf0;
+            --secondary-color: #00ff8c;
+            --accent-color: #ff00d6;
+            --dark-bg: #0a0e17;
+            --light-bg: #f0f4f8;
+            --card-bg-dark: rgba(15, 23, 42, 0.9);
+            --card-bg-light: rgba(255, 255, 255, 0.95);
+            --text-dark: #e2e8f0;
+            --text-light: #2d3748;
+            --shadow-dark: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --shadow-light: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --ir-color: #ff3e3e;
+            --rf-color: #3e7dff;
+            --bluetooth-color: #2d5aff;
+            --wifi-color: #00c853;
+            --touch-color: #03a9f4; /* 触摸控制专属蓝色系 */
+        }
+
+        .dark-theme {
+            --bg: var(--dark-bg);
+            --card-bg: var(--card-bg-dark);
+            --text-color: var(--text-dark);
+            --shadow: var(--shadow-dark);
+            --icon-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        .light-theme {
+            --bg: var(--light-bg);
+            --card-bg: var(--card-bg-light);
+            --text-color: var(--text-light);
+            --shadow: var(--shadow-light);
+            --icon-bg: rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s, color 0.3s, transform 0.3s;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 20px;
+            position: relative;
+        }
+
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            z-index: 1;
+            position: relative;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #2c3e50;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .language-switcher {
+            display: flex;
+            gap: 10px;
+            background: var(--card-bg);
+            padding: 5px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .lang-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn.active {
+            background: var(--primary-color);
+            color: #000;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-color);
+            text-decoration: none;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--secondary-color);
+            transform: translateX(-5px);
+        }
+
+        /* 技术头部区域 */
+        .tech-header {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(128, 128, 128, 0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .tech-icon-large {
+            font-size: 80px;
+            color: var(--touch-color);
+            text-shadow: 0 0 20px rgba(3, 169, 244, 0.5);
+            padding: 20px;
+            background: var(--icon-bg);
+            border-radius: 50%;
+            min-width: 140px;
+            text-align: center;
+        }
+
+        .tech-header-content {
+            flex: 1;
+        }
+
+        .tech-title {
+            font-size: 32px;
+            margin-bottom: 15px;
+            color: var(--touch-color);
+        }
+
+        .tech-subtitle {
+            font-size: 18px;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+
+        .tech-description {
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .tech-nav {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tech-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--icon-bg);
+            border-radius: 30px;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .tech-nav-item:hover {
+            background: rgba(3, 169, 244, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .tech-nav-item.active {
+            background: var(--touch-color);
+            color: #fff;
+        }
+
+        /* LED脉冲效果 */
+        .led-effect {
+            height: 4px;
+            background: linear-gradient(90deg, var(--touch-color), #2979ff);
+            border-radius: 2px;
+            margin: 20px 0;
+            box-shadow: 0 0 10px var(--touch-color),
+                        0 0 20px var(--touch-color);
+            animation: pulse 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; box-shadow: 0 0 10px var(--touch-color), 0 0 20px var(--touch-color); }
+            100% { opacity: 1; box-shadow: 0 0 15px var(--touch-color), 0 0 30px var(--touch-color), 0 0 45px var(--touch-color); }
+        }
+
+        /* 触摸演示区域 */
+        .touch-demo {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .demo-title {
+            font-size: 20px;
+            margin-bottom: 25px;
+            color: var(--touch-color);
+        }
+
+        .touch-pad {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            background: var(--icon-bg);
+            border-radius: 20px;
+            border: 2px solid var(--touch-color);
+            position: relative;
+            overflow: hidden;
+            touch-action: none;
+            cursor: pointer;
+        }
+
+        .touch-indicator {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, var(--touch-color), #0288d1);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 0 20px var(--touch-color);
+            transition: opacity 0.1s ease;
+        }
+
+        .touch-zones {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            height: 100%;
+        }
+
+        .touch-zone {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--touch-color);
+            font-size: 24px;
+            border: 1px solid rgba(3, 169, 244, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .touch-zone.active {
+            background: rgba(3, 169, 244, 0.2);
+            transform: scale(0.95);
+        }
+
+        .demo-led {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 30px auto 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 30px;
+            border: 2px solid rgba(3, 169, 244, 0.3);
+        }
+
+        .demo-led.on {
+            background: radial-gradient(circle, var(--touch-color), #0288d1);
+            box-shadow: 0 0 20px var(--touch-color), 0 0 40px var(--touch-color);
+            color: white;
+        }
+
+        .demo-status {
+            margin-top: 20px;
+            font-size: 16px;
+            min-height: 24px;
+        }
+
+        /* 内容网格布局 */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .info-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(128, 128, 128, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--touch-color);
+        }
+
+        .section-title {
+            font-size: 22px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            color: var(--touch-color);
+        }
+
+        /* 技术规格列表 */
+        .spec-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .spec-item {
+            background: var(--icon-bg);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .spec-label {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: var(--touch-color);
+        }
+
+        .spec-value {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* 核心特性列表 */
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .feature-item {
+            display: flex;
+            gap: 15px;
+        }
+
+        .feature-icon {
+            color: var(--touch-color);
+            margin-top: 3px;
+            flex-shrink: 0;
+        }
+
+        .feature-content {
+            flex: 1;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .feature-desc {
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        /* 触摸技术类型 */
+        .touch-tech-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .touch-tech-type {
+            background: var(--icon-bg);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .touch-tech-type:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+
+        .touch-tech-icon {
+            color: var(--touch-color);
+            font-size: 30px;
+            margin-bottom: 15px;
+        }
+
+        .touch-tech-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .touch-tech-desc {
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        /* 应用场景卡片 */
+        .application-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .application-card {
+            background: var(--icon-bg);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .application-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+
+        .application-icon {
+            color: var(--touch-color);
+            font-size: 30px;
+            margin-bottom: 15px;
+        }
+
+        .application-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .application-desc {
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        /* 特色项目展示 */
+        .project-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .project-item {
+            background: var(--icon-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .project-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+
+        .project-img {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(45deg, var(--touch-color), #2979ff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .project-content {
+            padding: 20px;
+        }
+
+        .project-title {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .project-desc {
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        /* 页脚样式 */
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            border-top: 1px solid rgba(128, 128, 128, 0.2);
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 30px;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .social-link {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--icon-bg);
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+
+        .social-link:hover {
+            background: var(--primary-color);
+            color: #000;
+            transform: translateY(-5px) scale(1.1);
+        }
+
+        /* 提示框样式 */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 140px;
+            background-color: var(--primary-color);
+            color: #000;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -70px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-weight: bold;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--primary-color) transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tech-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .tech-nav {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .spec-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .touch-tech-types {
+                grid-template-columns: 1fr;
+            }
+            
+            .application-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .project-showcase {
+                grid-template-columns: 1fr;
+            }
+            
+            .touch-pad {
+                width: 100%;
+                max-width: 300px;
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div id="particles-js"></div>
+    
+    <div class="container">
+        <header>
+            <a href="index.html" class="logo">
+                <i class="fas fa-lightbulb"></i>
+                <span class="en">LED Control Specialist</span>
+                <span class="zh">LED控制专家</span>
+            </a>
+            
+            <div class="controls">
+                <label class="theme-switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+                
+                <div class="language-switcher">
+                    <button class="lang-btn active" data-lang="zh">中文</button>
+                    <button class="lang-btn" data-lang="en">English</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 返回首页链接 -->
+        <a href="index.html" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            <span class="en">Back to homepage</span>
+            <span class="zh">返回首页</span>
+        </a>
+
+        <!-- 技术头部介绍 -->
+        <div class="tech-header">
+            <div class="tech-icon-large">
+                <i class="fas fa-hand-sparkles"></i>
+            </div>
+            <div class="tech-header-content">
+                <h1 class="tech-title">
+                    <span class="en">Touch Control Technology</span>
+                    <span class="zh">触摸控制技术</span>
+                </h1>
+                <p class="tech-subtitle">
+                    <span class="en">Sleek, responsive interfaces for modern LED lighting systems</span>
+                    <span class="zh">用于现代LED照明系统的流畅、响应迅速的控制界面</span>
+                </p>
+                <p class="tech-description en">
+                    Touch control technology provides intuitive, hygienic, and durable interfaces for LED lighting systems. Our capacitive and resistive touch solutions offer precise operation with customizable sensitivity, multi-touch capabilities, and sleek design options, perfect for contemporary environments where aesthetics and functionality converge.
+                </p>
+                <p class="tech-description zh">
+                    触摸控制技术为LED照明系统提供直观、卫生且耐用的操作界面。我们的电容式和电阻式触摸解决方案可提供精确操作，具有可定制的灵敏度、多点触摸功能和时尚的设计选项，非常适合美观与功能相结合的现代环境。
+                </p>
+                
+                <!-- 技术导航 -->
+                <div class="tech-nav">
+                    <a href="#" class="tech-nav-item active">
+                        <i class="fas fa-info-circle"></i>
+                        <span class="en">Overview</span>
+                        <span class="zh">概述</span>
+                    </a>
+                    <a href="#" class="tech-nav-item">
+                        <i class="fas fa-cogs"></i>
+                        <span class="en">Specifications</span>
+                        <span class="zh">技术规格</span>
+                    </a>
+                    <a href="#" class="tech-nav-item">
+                        <i class="fas fa-microchip"></i>
+                        <span class="en">Technology Types</span>
+                        <span class="zh">技术类型</span>
+                    </a>
+                    <a href="#" class="tech-nav-item">
+                        <i class="fas fa-project-diagram"></i>
+                        <span class="en">Applications</span>
+                        <span class="zh">应用场景</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- LED脉冲分隔线 -->
+        <div class="led-effect"></div>
+
+        <!-- 交互式触摸演示 -->
+        <div class="touch-demo">
+            <h3 class="demo-title">
+                <span class="en">Interactive Touch Demo</span>
+                <span class="zh">交互式触摸演示</span>
+            </h3>
+            
+            <div class="touch-pad" id="touchPad">
+                <div class="touch-indicator" id="touchIndicator"></div>
+                <div class="touch-zones">
+                    <div class="touch-zone" data-action="on">
+                        <i class="fas fa-power-off"></i>
+                    </div>
+                    <div class="touch-zone" data-action="off">
+                        <i class="fas fa-power-off fa-rotate-135"></i>
+                    </div>
+                    <div class="touch-zone" data-action="brightnessUp">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div class="touch-zone" data-action="brightnessDown">
+                        <i class="fas fa-minus"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="demo-led" id="demoLed">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            
+            <div class="demo-status" id="demoStatus">
+                <span class="en">LED is off</span>
+                <span class="zh">LED已关闭</span>
+            </div>
+        </div>
+
+        <!-- 核心内容区域 -->
+        <div class="content-grid">
+            <!-- 技术规格卡片 -->
+            <div class="info-card">
+                <h3 class="section-title">
+                    <i class="fas fa-microchip section-icon"></i>
+                    <span class="en">Technical Specifications</span>
+                    <span class="zh">技术规格</span>
+                </h3>
+                
+                <div class="spec-list">
+                    <div class="spec-item">
+                        <div class="spec-label en">Touch Technology</div>
+                        <div class="spec-label zh">触摸技术</div>
+                        <div class="spec-value">Capacitive, Resistive, Surface Acoustic Wave</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label en">Operating Voltage</div>
+                        <div class="spec-label zh">工作电压</div>
+                        <div class="spec-value">3V-5V DC (control), 12V-24V (power)</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label en">Touch Sensitivity</div>
+                        <div class="spec-label zh">触摸灵敏度</div>
+                        <div class="spec-value">0.5-5mm detection distance (adjustable)</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label en">Response Time</div>
+                        <div class="spec-label zh">响应时间</div>
+                        <div class="spec-value">&lt;100ms</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label en">Multi-touch Points</div>
+                        <div class="spec-label zh">多点触摸</div>
+                        <div class="spec-value">Up to 10 points (depending on model)</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label en">Operating Temperature</div>
+                        <div class="spec-label zh">工作温度</div>
+                        <div class="spec-value">-20°C to +70°C</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label en">Protection Rating</div>
+                        <div class="spec-label zh">防护等级</div>
+                        <div class="spec-value">IP65 to IP67 (waterproof models)</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label en">Interface</div>
+                        <div class="spec-label zh">接口类型</div>
+                        <div class="spec-value">I2C, SPI, USB, RS485, Wireless</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 核心特性列表 -->
+            <div class="info-card">
+                <h3 class="section-title">
+                    <i class="fas fa-star section-icon"></i>
+                    <span class="en">Key Features</span>
+                    <span class="zh">核心特性</span>
+                </h3>
+                
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <i class="fas fa-bolt feature-icon"></i>
+                        <div class="feature-content">
+                            <div class="feature-title en">Instant Response</div>
+                            <div class="feature-title zh">即时响应</div>
+                            <div class="feature-desc en">Ultra-fast touch detection with response times under 100ms for seamless user experience.</div>
+                            <div class="feature-desc zh">超快速触摸检测，响应时间低于100ms，提供无缝用户体验。</div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-tint-slash feature-icon"></i>
+                        <div class="feature-content">
+                            <div class="feature-title en">Water & Dust Resistant</div>
+                            <div class="feature-title zh">防水防尘</div>
+                            <div class="feature-desc en">Sealed design with IP65-IP67 ratings, suitable for wet environments like bathrooms and kitchens.</div>
+                            <div class="feature-desc zh">密封设计，防护等级达IP65-IP67，适用于浴室和厨房等潮湿环境。</div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-paint-brush feature-icon"></i>
+                        <div class="feature-content">
+                            <div class="feature-title en">Customizable Design</div>
+                            <div class="feature-title zh">可定制设计</div>
+                            <div class="feature-desc en">Flexible integration with various surfaces including glass, plastic, and metal for seamless aesthetic integration.</div>
+                            <div class="feature-desc zh">可灵活集成到玻璃、塑料和金属等各种表面，实现无缝美观的设计。</div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-hand-sparkles feature-icon"></i>
+                        <div class="feature-content">
+                            <div class="feature-title en">Multi-touch Capability</div>
+                            <div class="feature-title zh">多点触摸功能</div>
+                            <div class="feature-desc en">Support for multiple simultaneous touches enabling advanced control gestures like swiping and pinching.</div>
+                            <div class="feature-desc zh">支持多个同时触摸，实现滑动和捏合等高级控制手势。</div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-shield-alt feature-icon"></i>
+                        <div class="feature-content">
+                            <div class="feature-title en">Anti-interference</div>
+                            <div class="feature-title zh">抗干扰能力</div>
+                            <div class="feature-desc en">Advanced filtering algorithms prevent false triggers from moisture, EMI, and environmental factors.</div>
+                            <div class="feature-desc zh">先进的滤波算法可防止因湿气、电磁干扰和环境因素引起的误触发。</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 触摸技术类型 -->
+        <div class="info-card">
+            <h3 class="section-title">
+                <i class="fas fa-microchip section-icon"></i>
+                <span class="en">Touch Technology Types</span>
+                <span class="zh">触摸技术类型</span>
+            </h3>
+            
+            <div class="touch-tech-types">
+                <div class="touch-tech-type">
+                    <div class="touch-tech-icon">
+                        <i class="fas fa-wave-square"></i>
+                    </div>
+                    <div class="touch-tech-title en">Capacitive Touch</div>
+                    <div class="touch-tech-title zh">电容式触摸</div>
+                    <div class="touch-tech-desc en">Detects changes in electrical charge from human contact, offering high sensitivity and durability with no moving parts.</div>
+                    <div class="touch-tech-desc zh">通过检测人体接触引起的电荷变化来工作，具有高灵敏度和耐用性，无活动部件。</div>
+                </div>
+                
+                <div class="touch-tech-type">
+                    <div class="touch-tech-icon">
+                        <i class="fas fa-arrows-up-down"></i>
+                    </div>
+                    <div class="touch-tech-title en">Resistive Touch</div>
+                    <div class="touch-tech-title zh">电阻式触摸</div>
+                    <div class="touch-tech-desc en">Works through pressure applied to a flexible surface, ideal for harsh environments and operation with gloves.</div>
+                    <div class="touch-tech-desc zh">通过施加在柔性表面上的压力工作，适用于恶劣环境和戴手套操作的场景。</div>
+                </div>
+                
+                <div class="touch-tech-type">
+                    <div class="touch-tech-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <div class="touch-tech-title en">Surface Acoustic Wave</div>
+                    <div class="touch-tech-title zh">表面声波式</div>
+                    <div class="touch-tech-desc en">Uses ultrasonic waves on glass surface for high clarity and precision, resistant to contaminants.</div>
+                    <div class="touch-tech-desc zh">利用玻璃表面的超声波实现高清晰度和精度，抗污染能力强。</div>
+                </div>
+                
+                <div class="touch-tech-type">
+                    <div class="touch-tech-icon">
+                        <i class="fas fa-magic"></i>
+                    </div>
+                    <div class="touch-tech-title en">Infrared Touch</div>
+                    <div class="touch-tech-title zh">红外触摸</div>
+                    <div class="touch-tech-desc en">Detects interruptions in infrared light grid, supporting multi-touch with excellent durability and optical clarity.</div>
+                    <div class="touch-tech-desc zh">通过检测红外光网格的中断来工作，支持多点触摸，具有出色的耐用性和光学清晰度。</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 应用场景卡片 -->
+        <div class="info-card">
+            <h3 class="section-title">
+                <i class="fas fa-briefcase section-icon"></i>
+                <span class="en">Typical Applications</span>
+                <span class="zh">典型应用</span>
+            </h3>
+            
+            <div class="application-cards">
+                <div class="application-card">
+                    <div class="application-icon">
+                        <i class="fas fa-hotel"></i>
+                    </div>
+                    <div class="application-title en">Hospitality Industry</div>
+                    <div class="application-title zh">酒店行业</div>
+                    <div class="application-desc en">Sleek touch panels for hotel rooms, providing guests with intuitive control over lighting, temperature and amenities.</div>
+                    <div class="application-desc zh">用于酒店客房的时尚触摸面板，为客人提供对照明、温度和设施的直观控制。</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="application-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="application-title en">Smart Homes</div>
+                    <div class="application-title zh">智能家居</div>
+                    <div class="application-desc en">Integrated touch controls for home lighting systems, offering seamless integration with smart home ecosystems.</div>
+                    <div class="application-desc zh">用于家庭照明系统的集成触摸控制，可与智能家居生态系统无缝集成。</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="application-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="application-title en">Commercial Spaces</div>
+                    <div class="application-title zh">商业空间</div>
+                    <div class="application-desc en">Elegant touch interfaces for office buildings, shopping malls, and restaurants with high aesthetic requirements.</div>
+                    <div class="application-desc zh">用于办公楼、购物中心和餐厅等对美观有较高要求的商业场所的优雅触摸界面。</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="application-icon">
+                        <i class="fas fa-hospital"></i>
+                    </div>
+                    <div class="application-title en">Healthcare Facilities</div>
+                    <div class="application-title zh">医疗设施</div>
+                    <div class="application-desc en">Hygienic touch controls for hospitals and clinics, featuring easy-to-clean surfaces and antimicrobial properties.</div>
+                    <div class="application-desc zh">用于医院和诊所的卫生触摸控制，具有易于清洁的表面和抗菌特性。</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 特色项目展示 -->
+        <div class="info-card">
+            <h3 class="section-title">
+                <i class="fas fa-project-diagram section-icon"></i>
+                <span class="en">Featured Projects</span>
+                <span class="zh">特色项目</span>
+            </h3>
+            
+            <div class="project-showcase">
+                <div class="project-item">
+                    <div class="project-img">
+                        <i class="fas fa-city"></i>
+                    </div>
+                    <div class="project-content">
+                        <div class="project-title en">Shanghai Financial Center</div>
+                        <div class="project-title zh">上海金融中心</div>
+                        <div class="project-desc en">Custom touch panels integrated into the building's smart lighting system.</div>
+                        <div class="project-desc zh">定制触摸面板集成到建筑的智能照明系统中。</div>
+                    </div>
+                </div>
+                
+                <div class="project-item">
+                    <div class="project-img">
+                        <i class="fas fa-hotel"></i>
+                    </div>
+                    <div class="project-content">
+                        <div class="project-title en">Luxury Hotel Chain</div>
+                        <div class="project-title zh">豪华酒店连锁</div>
+                        <div class="project-desc en">Touch-controlled ambient lighting systems for 500+ guest rooms.</div>
+                        <div class="project-desc zh">为500多间客房提供触摸控制的环境照明系统。</div>
+                    </div>
+                </div>
+                
+                <div class="project-item">
+                    <div class="project-img">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div class="project-content">
+                        <div class="project-title en">Retail Store Lighting</div>
+                        <div class="project-title zh">零售商店照明</div>
+                        <div class="project-desc en">Interactive touch displays for product showcase lighting control.</div>
+                        <div class="project-desc zh">用于产品展示照明控制的交互式触摸显示屏。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <footer>
+            <p>&copy; 2023 <span class="en">Yuewu Xiao - LED Control Technology Specialist</span><span class="zh">肖跃武 - LED控制技术专家</span></p>
+           <div class="social-links">
+                <a href="javascript:void(0);" class="social-link tooltip" onclick="copyWeChat()">
+                    <i class="fab fa-weixin"></i>
+                    <span class="tooltiptext en">WeChat: EKU559</span>
+                    <span class="tooltiptext zh">微信号: EKU559</span>
+                </a>
+                <a href="tel:+8618816761182" class="social-link">
+                    <i class="fas fa-phone"></i>
+                </a>
+                <a href="mailto:909323609@qq.com" class="social-link">
+                    <i class="fas fa-envelope"></i>
+                </a>
+                <a href="https://flbook.com.cn/c/g7PfxOUZ2f" class="social-link" target="_blank">
+                    <i class="fas fa-book-open"></i>
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        // 主题切换功能
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('change', () => {
+            document.body.classList.toggle('dark-theme');
+            document.body.classList.toggle('light-theme');
+        });
+
+        // 语言切换功能
+        const langButtons = document.querySelectorAll('.lang-btn');
+        langButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const lang = button.getAttribute('data-lang');
+                langButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // 这里可以添加实际的语言切换逻辑
+                // 目前只是示例，实际实现需要更复杂的逻辑
+                document.querySelectorAll('.en').forEach(el => {
+                    el.style.display = lang === 'en' ? 'block' : 'none';
+                });
+                document.querySelectorAll('.zh').forEach(el => {
+                    el.style.display = lang === 'zh' ? 'block' : 'none';
+                });
+            });
+        });
+
+        // 触摸演示交互功能
+        const touchPad = document.getElementById('touchPad');
+        const touchIndicator = document.getElementById('touchIndicator');
+        const demoLed = document.getElementById('demoLed');
+        const demoStatus = document.getElementById('demoStatus');
+        const touchZones = document.querySelectorAll('.touch-zone');
+        
+        let isLedOn = false;
+        let brightness = 0;
+        
+        // 触摸事件监听
+        touchPad.addEventListener('mousedown', handleTouch);
+        touchPad.addEventListener('touchstart', handleTouch, { passive: false });
+        
+        touchPad.addEventListener('mousemove', handleMove);
+        touchPad.addEventListener('touchmove', handleMove, { passive: false });
+        
+        touchPad.addEventListener('mouseup', handleEnd);
+        touchPad.addEventListener('touchend', handleEnd);
+        touchPad.addEventListener('mouseleave', handleEnd);
+        
+        function handleTouch(e) {
+            e.preventDefault();
+            updateTouchPosition(e);
+            touchIndicator.style.opacity = '1';
+            
+            // 检测触摸区域
+            const rect = touchPad.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - rect.left;
+            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            
+            checkTouchZone(x, y, true);
+        }
+        
+        function handleMove(e) {
+            e.preventDefault();
+            updateTouchPosition(e);
+            
+            // 检测触摸区域
+            const rect = touchPad.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - rect.left;
+            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            
+            checkTouchZone(x, y, false);
+        }
+        
+        function handleEnd() {
+            touchIndicator.style.opacity = '0';
+            
+            // 移除所有区域的激活状态
+            touchZones.forEach(zone => {
+                zone.classList.remove('active');
+            });
+        }
+        
+        function updateTouchPosition(e) {
+            const rect = touchPad.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - rect.left;
+            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            
+            touchIndicator.style.left = `${x}px`;
+            touchIndicator.style.top = `${y}px`;
+        }
+        
+        function checkTouchZone(x, y, isInitial) {
+            const width = touchPad.offsetWidth;
+            const height = touchPad.offsetHeight;
+            
+            // 移除所有区域的激活状态
+            touchZones.forEach(zone => {
+                zone.classList.remove('active');
+            });
+            
+            // 检测触摸区域
+            if (x < width/2 && y < height/2) {
+                // 左上区域 - 开灯
+                touchZones[0].classList.add('active');
+                if (isInitial) turnOnLed();
+            } else if (x >= width/2 && y < height/2) {
+                // 右上区域 - 关灯
+                touchZones[1].classList.add('active');
+                if (isInitial) turnOffLed();
+            } else if (x < width/2 && y >= height/2) {
+                // 左下区域 - 增加亮度
+                touchZones[2].classList.add('active');
+                if (!isInitial) increaseBrightness();
+            } else if (x >= width/2 && y >= height/2) {
+                // 右下区域 - 减少亮度
+                touchZones[3].classList.add('active');
+                if (!isInitial) decreaseBrightness();
+            }
+        }
+        
+        function turnOnLed() {
+            isLedOn = true;
+            brightness = 100;
+            updateLedDisplay();
+        }
+        
+        function turnOffLed() {
+            isLedOn = false;
+            brightness = 0;
+            updateLedDisplay();
+        }
+        
+        function increaseBrightness() {
+            if (isLedOn && brightness < 100) {
+                brightness += 10;
+                if (brightness > 100) brightness = 100;
+                updateLedDisplay();
+            }
+        }
+        
+        function decreaseBrightness() {
+            if (isLedOn && brightness > 0) {
+                brightness -= 10;
+                if (brightness < 0) brightness = 0;
+                if (brightness === 0) isLedOn = false;
+                updateLedDisplay();
+            }
+        }
+        
+        function updateLedDisplay() {
+            if (isLedOn) {
+                demoLed.classList.add('on');
+                demoLed.style.opacity = brightness / 100;
+                demoLed.style.transform = `scale(${0.8 + brightness/250})`;
+                
+                if (document.querySelector('.lang-btn.active').getAttribute('data-lang') === 'en') {
+                    demoStatus.textContent = `LED is on (${brightness}% brightness)`;
+                } else {
+                    demoStatus.textContent = `LED已开启 (${brightness}% 亮度)`;
+                }
+            } else {
+                demoLed.classList.remove('on');
+                if (document.querySelector('.lang-btn.active').getAttribute('data-lang') === 'en') {
+                    demoStatus.textContent = 'LED is off';
+                } else {
+                    demoStatus.textContent = 'LED已关闭';
+                }
+            }
+        }
+
+        // 初始化粒子背景
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 40, density: { enable: true, value_area: 800 } },
+                color: { value: "#03a9f4" },
+                shape: { type: "circle" },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: "#03a9f4",
+                    opacity: 0.2,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 1,
+                    direction: "none",
+                    random: true,
+                    straight: false,
+                    out_mode: "out",
+                    bounce: false
+                }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "grab" },
+                    onclick: { enable: true, mode: "push" },
+                    resize: true
+                }
+            },
+            retina_detect: true
+        });
+
+        // 初始化页面语言
+        document.querySelectorAll('.en').forEach(el => {
+            el.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
