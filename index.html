@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>肖跃武 - LED控制技术专家</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #0aabf0;
+            --secondary-color: #00ff8c;
+            --accent-color: #ff00d6;
+            --dark-bg: #0a0e17;
+            --light-bg: #f0f4f8;
+            --card-bg-dark: rgba(15, 23, 42, 0.9);
+            --card-bg-light: rgba(255, 255, 255, 0.95);
+            --text-dark: #e2e8f0;
+            --text-light: #2d3748;
+            --shadow-dark: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --shadow-light: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --ir-color: #ff3e3e;
+            --rf-color: #3e7dff;
+            --bluetooth-color: #2d5aff;
+            --wifi-color: #00c853;
+            --sensor-color: #ff9800;
+            --touch-color: #9c27b0;
+            --button-color: #795548;
+        }
+
+        .dark-theme {
+            --bg: var(--dark-bg);
+            --card-bg: var(--card-bg-dark);
+            --text-color: var(--text-dark);
+            --shadow: var(--shadow-dark);
+            --icon-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        .light-theme {
+            --bg: var(--light-bg);
+            --card-bg: var(--card-bg-light);
+            --text-color: var(--text-light);
+            --shadow: var(--shadow-light);
+            --icon-bg: rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s, color 0.3s, transform 0.3s;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 20px;
+            position: relative;
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            z-index: 1;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #2c3e50;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .language-switcher {
+            display: flex;
+            gap: 10px;
+            background: var(--card-bg);
+            padding: 5px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .lang-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn.active {
+            background: var(--primary-color);
+            color: #000;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 30px;
+        }
+
+        .profile-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(128, 128, 128, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(10, 171, 240, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 8s infinite linear;
+            z-index: 0;
+        }
+
+        @keyframes shimmer {
+            0% { transform: rotate(45deg) translateX(-100%); }
+            100% { transform: rotate(45deg) translateX(100%); }
+        }
+
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary-color);
+            box-shadow: 0 0 20px var(--primary-color);
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s;
+        }
+
+        .profile-img:hover {
+            transform: scale(1.05);
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-title {
+            color: var(--primary-color);
+            font-size: 18px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-desc {
+            margin-bottom: 25px;
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+
+        .contact-info {
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 10px;
+            background: var(--icon-bg);
+            transition: transform 0.3s;
+        }
+
+        .contact-item:hover {
+            transform: translateX(5px);
+        }
+
+        .contact-icon {
+            color: var(--primary-color);
+            font-size: 18px;
+            width: 24px;
+        }
+
+        .contact-link {
+            color: var(--text-color);
+            text-decoration: none;
+            flex-grow: 1;
+            cursor: pointer;
+        }
+
+        .contact-link:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+
+        /* 公司地址定位分享样式 */
+        .location-share {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            background: var(--icon-bg);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+            position: relative;
+        }
+
+        .location-share:hover {
+            background: rgba(10, 171, 240, 0.1);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .location-icon {
+            color: var(--primary-color);
+            font-size: 20px;
+            width: 24px;
+        }
+
+        .location-text {
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        .location-hint {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 3px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .share-arrow {
+            color: var(--primary-color);
+            font-size: 14px;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .location-share:hover .share-arrow {
+            opacity: 1;
+            transform: translateX(3px);
+        }
+
+        /* 定位分享弹窗 */
+        .location-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .location-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .location-modal-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 450px;
+            padding: 30px;
+            text-align: center;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.3s ease;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .location-modal.show .location-modal-content {
+            transform: translateY(0) scale(1);
+        }
+
+        .location-modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .location-modal-icon {
+            font-size: 60px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        .location-modal-title {
+            font-size: 22px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .location-modal-address {
+            font-size: 16px;
+            margin-bottom: 25px;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        .location-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .location-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background: var(--icon-bg);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .location-option:hover {
+            transform: translateY(-5px);
+            background: rgba(10, 171, 240, 0.1);
+            border-color: var(--primary-color);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .location-option-icon {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+
+        .location-option-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .location-modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .location-modal-btn {
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 14px;
+        }
+
+        .location-modal-btn.primary {
+            background: var(--primary-color);
+            color: #000;
+        }
+
+        .location-modal-btn.secondary {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .location-modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(128, 128, 128, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+        }
+
+        .section-title {
+            font-size: 22px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            color: var(--primary-color);
+        }
+
+        .expertise-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* 技术卡片样式 - 保持之前的动画效果 */
+        .nav-card {
+            background: var(--icon-bg);
+            padding: 20px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            border-left: 3px solid var(--primary-color);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: var(--text-color);
+        }
+
+        .nav-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+
+        /* 技术卡片特定样式 */
+        .ir-card {
+            border-left-color: var(--ir-color);
+        }
+
+        .rf-card {
+            border-left-color: var(--rf-color);
+        }
+
+        .bluetooth-card {
+            border-left-color: var(--bluetooth-color);
+        }
+
+        .wifi-card {
+            border-left-color: var(--wifi-color);
+        }
+
+        .sensor-card {
+            border-left-color: var(--sensor-color);
+        }
+
+        .touch-card {
+            border-left-color: var(--touch-color);
+        }
+
+        .button-card {
+            border-left-color: var(--button-color);
+        }
+
+        /* 通用图标容器样式 */
+        .tech-icon-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tech-icon-base {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .tech-icon-inner {
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .tech-signal {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .tech-wave {
+            position: absolute;
+            border: 2px solid;
+            border-radius: 50%;
+            opacity: 0;
+            animation: techPulse 3s infinite;
+        }
+
+        .tech-wave-1 {
+            width: 80px;
+            height: 80px;
+            top: 0;
+            left: 0;
+            animation-delay: 0s;
+        }
+
+        .tech-wave-2 {
+            width: 100px;
+            height: 100px;
+            top: -10px;
+            left: -10px;
+            animation-delay: 1s;
+        }
+
+        .tech-wave-3 {
+            width: 120px;
+            height: 120px;
+            top: -20px;
+            left: -20px;
+            animation-delay: 2s;
+        }
+
+        @keyframes techPulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        /* 各技术图标颜色 */
+        .ir-icon-base {
+            background: linear-gradient(135deg, var(--ir-color), #ff6b6b);
+            box-shadow: 0 0 15px rgba(255, 62, 62, 0.5);
+        }
+
+        .ir-icon-inner {
+            color: var(--ir-color);
+        }
+
+        .ir-wave {
+            border-color: var(--ir-color);
+        }
+
+        .rf-icon-base {
+            background: linear-gradient(135deg, var(--rf-color), #6b8cff);
+            box-shadow: 0 0 15px rgba(62, 125, 255, 0.5);
+        }
+
+        .rf-icon-inner {
+            color: var(--rf-color);
+        }
+
+        .rf-wave {
+            border-color: var(--rf-color);
+        }
+
+        .bluetooth-icon-base {
+            background: linear-gradient(135deg, var(--bluetooth-color), #6b7bff);
+            box-shadow: 0 0 15px rgba(45, 90, 255, 0.5);
+        }
+
+        .bluetooth-icon-inner {
+            color: var(--bluetooth-color);
+        }
+
+        .bluetooth-wave {
+            border-color: var(--bluetooth-color);
+        }
+
+        .wifi-icon-base {
+            background: linear-gradient(135deg, var(--wifi-color), #4cff8c);
+            box-shadow: 0 0 15px rgba(0, 200, 83, 0.5);
+        }
+
+        .wifi-icon-inner {
+            color: var(--wifi-color);
+        }
+
+        .wifi-wave {
+            border-color: var(--wifi-color);
+        }
+
+        .sensor-icon-base {
+            background: linear-gradient(135deg, var(--sensor-color), #ffb74d);
+            box-shadow: 0 0 15px rgba(255, 152, 0, 0.5);
+        }
+
+        .sensor-icon-inner {
+            color: var(--sensor-color);
+        }
+
+        .sensor-wave {
+            border-color: var(--sensor-color);
+        }
+
+        .touch-icon-base {
+            background: linear-gradient(135deg, var(--touch-color), #ba68c8);
+            box-shadow: 0 0 15px rgba(156, 39, 176, 0.5);
+        }
+
+        .touch-icon-inner {
+            color: var(--touch-color);
+        }
+
+        .touch-wave {
+            border-color: var(--touch-color);
+        }
+
+        .button-icon-base {
+            background: linear-gradient(135deg, var(--button-color), #a1887f);
+            box-shadow: 0 0 15px rgba(121, 85, 72, 0.5);
+        }
+
+        .button-icon-inner {
+            color: var(--button-color);
+        }
+
+        .button-wave {
+            border-color: var(--button-color);
+        }
+
+        .tech-title {
+            color: var(--primary-color);
+            font-size: 18px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tech-details {
+            margin-top: 15px;
+            font-size: 14px;
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        .applications {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .app-tag {
+            background: rgba(128, 128, 128, 0.1);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+        .nav-hint {
+            margin-top: 15px;
+            font-size: 12px;
+            opacity: 0.7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .projects-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .project-item {
+            background: var(--icon-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .project-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+
+        .project-img {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            color: rgba(0, 0, 0, 0.5);
+        }
+
+        .project-content {
+            padding: 20px;
+        }
+
+        .project-title {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .project-desc {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            border-top: 1px solid rgba(128, 128, 128, 0.2);
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .social-link {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--icon-bg);
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+
+        .social-link:hover {
+            background: var(--primary-color);
+            color: #000;
+            transform: translateY(-5px) scale(1.1);
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .location-options {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .expertise-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .projects-showcase {
+                grid-template-columns: 1fr;
+            }
+            
+            .location-modal-actions {
+                flex-direction: column;
+            }
+        }
+
+        .led-effect {
+            height: 4px;
+            background: linear-gradient(90deg, 
+                var(--primary-color), 
+                var(--secondary-color), 
+                var(--accent-color));
+            border-radius: 2px;
+            margin: 20px 0;
+            box-shadow: 0 0 10px var(--primary-color),
+                        0 0 20px var(--primary-color);
+            animation: pulse 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; box-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color); }
+            100% { opacity: 1; box-shadow: 0 0 15px var(--primary-color), 0 0 30px var(--primary-color), 0 0 45px var(--primary-color); }
+        }
+
+        .badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--accent-color);
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 2;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            color: var(--secondary-color);
+            transform: scale(1.2);
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 140px;
+            background-color: var(--primary-color);
+            color: #000;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -70px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-weight: bold;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--primary-color) transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .flbook-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .external-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: #000;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .external-link-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            color: #000;
+            text-decoration: none;
+        }
+
+        .external-link-btn .link-icon {
+            font-size: 20px;
+        }
+
+        /* 复制成功提示 */
+        .copy-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary-color);
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1001;
+            pointer-events: none;
+        }
+
+        .copy-notification.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div id="particles-js"></div>
+    
+    <!-- 复制成功提示 -->
+    <div id="copy-notification" class="copy-notification">
+        <span class="en">Copied to clipboard!</span>
+        <span class="zh">已复制到剪贴板！</span>
+    </div>
+    
+    <!-- 定位分享弹窗 -->
+    <div id="location-modal" class="location-modal">
+        <div class="location-modal-content">
+            <div class="location-modal-icon">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <h3 class="location-modal-title">
+                <span class="en">Share Location</span>
+                <span class="zh">公司位置</span>
+            </h3>
+            <p class="location-modal-address">
+                <span class="en">Shenzhen Xinyu Intelligent Electronics Technology Co., Ltd.</span>
+                <span class="zh">深圳市鑫昱智能电子科技有限公司</span>
+            </p>
+            
+            <div class="location-options">
+                <div class="location-option" onclick="openMap('baidu')">
+                    <div class="location-option-icon" style="color: #3087ff;">
+                        <i class="fas fa-map"></i>
+                    </div>
+                    <div class="location-option-name">百度地图</div>
+                </div>
+                
+                <div class="location-option" onclick="openMap('gaode')">
+                    <div class="location-option-icon" style="color: #2fc25b;">
+                        <i class="fas fa-map-signs"></i>
+                    </div>
+                    <div class="location-option-name">高德地图</div>
+                </div>
+                
+                <div class="location-option" onclick="openMap('tencent')">
+                    <div class="location-option-icon" style="color: #587dff;">
+                        <i class="fas fa-map-marked"></i>
+                    </div>
+                    <div class="location-option-name">腾讯地图</div>
+                </div>
+                
+                <div class="location-option" onclick="openMap('apple')">
+                    <div class="location-option-icon" style="color: #007aff;">
+                        <i class="fas fa-map-pin"></i>
+                    </div>
+                    <div class="location-option-name">Apple地图</div>
+                </div>
+            </div>
+            
+            <div class="location-modal-actions">
+                <button class="location-modal-btn primary" onclick="copyAddress()">
+                    <span class="en">Copy Address</span>
+                    <span class="zh">复制地址</span>
+                </button>
+                <button class="location-modal-btn secondary" onclick="closeLocationModal()">
+                    <span class="en">Cancel</span>
+                    <span class="zh">取消</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- 主页面 -->
+        <div id="main-page" class="content-page active">
+            <header>
+                <div class="logo">
+                    <i class="fas fa-lightbulb"></i>
+                    <span class="en">LED Control Specialist</span>
+                    <span class="zh">LED控制专家</span>
+                </div>
+                
+                <div class="controls">
+                    <label class="theme-switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    
+                    <div class="language-switcher">
+                        <button class="lang-btn active" data-lang="zh">中文</button>
+                        <button class="lang-btn" data-lang="en">English</button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="main-content">
+                <div class="profile-card">
+                    <span class="badge en">Technical Expert</span>
+                    <span class="badge zh">技术专家</span>
+                    
+                    <img src="1111.jpg" alt="肖跃武" class="profile-img">
+                    <h2 class="profile-name">肖跃武 / Xiao Yuewu</h2>
+                    <p class="profile-title en">Wireless Control Systems Specialist</p>
+                    <p class="profile-title zh">无线控制系统专家</p>
+                    <p class="profile-desc en">We have rich experience in infrared, radio frequency, Bluetooth, WiFi, human body sensing and touch LED control technologies, as well as LED flexible screens and intelligent lighting solutions.
+</p>
+                    <p class="profile-desc zh">专注于红外、射频、蓝牙、WiFi、人体感应和触摸 LED控制技术，以及LED柔性屏和智能照明解决方案方面拥有丰富经验。</p>
+                    
+                    <div class="led-effect"></div>
+                    
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-phone contact-icon"></i>
+                            <a href="tel:+8618816761182" class="contact-link">+86 18816761182</a>
+                            <button class="copy-btn" data-text="+8618816761182"><i class="fas fa-copy"></i></button>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope contact-icon"></i>
+                            <a href="mailto:909323609@qq.com" class="contact-link">909323609@qq.com</a>
+                            <button class="copy-btn" data-text="909323609@qq.com"><i class="fas fa-copy"></i></button>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fab fa-weixin contact-icon"></i>
+                            <span class="contact-link" onclick="copyContact('EKU559')">EKU559</span>
+                            <button class="copy-btn" data-text="EKU559"><i class="fas fa-copy"></i></button>
+                        </div>
+                        <!-- 优化的定位分享组件 -->
+                        <div class="location-share" onclick="openLocationModal()">
+                            <i class="fas fa-map-marker-alt location-icon"></i>
+                            <div class="location-text">
+                                <div>
+                                    <span class="en">Shenzhen Xinyu Intelligent Electronics Technology Co., Ltd.</span>
+                                    <span class="zh">深圳市鑫昱智能电子科技有限公司</span>
+                                </div>
+                                <div class="location-hint">
+                                    <i class="fas fa-share-alt"></i>
+                                    <span class="en">Click to get location</span>
+                                    <span class="zh">点击获取位置</span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right share-arrow"></i>
+                        </div>
+                    </div>
+
+                    <div class="flbook-container">
+                        <a href="https://flbook.com.cn/c/g7PfxOUZ2f" class="external-link-btn" target="_blank">
+                            <i class="fas fa-book-open link-icon"></i>
+                            <span class="en">View My Online Portfolio</span>
+                            <span class="zh">查看我的在线作品集</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3 class="section-title">
+                        <i class="fas fa-microchip section-icon"></i>
+                        <span class="en">Technical Expertise</span>
+                        <span class="zh">技术专长</span>
+                    </h3>
+                    
+                    <div class="expertise-grid">
+                        <!-- 红外技术 -->
+                        <a href="ir.html" target="_blank" class="nav-card ir-card">
+                            <div class="tech-icon-container">
+                                <div class="tech-signal">
+                                    <div class="tech-wave ir-wave tech-wave-1"></div>
+                                    <div class="tech-wave ir-wave tech-wave-2"></div>
+                                    <div class="tech-wave ir-wave tech-wave-3"></div>
+                                </div>
+                                <div class="tech-icon-base ir-icon-base">
+                                    <div class="tech-icon-inner ir-icon-inner">
+                                        <i class="fas fa-satellite-dish"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <h4 class="tech-title">
+                                <span class="en">Infrared Technology</span>
+                                <span class="zh">红外技术</span>
+                            </h4>
+                            <p class="tech-details en">Advanced IR remote control systems with long-range capabilities and interference resistance</p>
+                            <p class="tech-details zh">先进红外遥控系统，具有长距离传输和抗干扰能力</p>
+                            <div class="applications">
+                                <span class="app-tag">Remote Control</span>
+                                <span class="app-tag">Home Automation</span>
+                                <span class="app-tag">Security Systems</span>
+                            </div>
+                            <div class="nav-hint">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span class="en">Open in new window</span>
+                                <span class="zh">在新窗口打开</span>
+                            </div>
+                        </a>
+                        
+                        <!-- 射频技术 -->
+                        <a href="rf.html" target="_blank" class="nav-card rf-card">
+                            <div class="tech-icon-container">
+                                <div class="tech-signal">
+                                    <div class="tech-wave rf-wave tech-wave-1"></div>
+                                    <div class="tech-wave rf-wave tech-wave-2"></div>
+                                    <div class="tech-wave rf-wave tech-wave-3"></div>
+                                </div>
+                                <div class="tech-icon-base rf-icon-base">
+                                    <div class="tech-icon-inner rf-icon-inner">
+                                        <i class="fas fa-broadcast-tower"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <h4 class="tech-title">
+                                <span class="en">RF Solutions</span>
+                                <span class="zh">射频解决方案</span>
+                            </h4>
+                            <p class="tech-details en">Radio frequency control systems with stable long-distance transmission and penetration capabilities</p>
+                            <p class="tech-details zh">射频控制系统，具有稳定的长距离传输和穿透能力</p>
+                            <div class="applications">
+                                <span class="app-tag">Wireless Control</span>
+                                <span class="app-tag">Industrial Automation</span>
+                                <span class="app-tag">IoT Devices</span>
+                            </div>
+                            <div class="nav-hint">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span class="en">Open in new window</span>
+                                <span class="zh">在新窗口打开</span>
+                            </div>
+                        </a>
+                        
+                        <!-- 蓝牙技术 -->
+                        <a href="bluetooth.html" target="_blank" class="nav-card bluetooth-card">
+                            <div class="tech-icon-container">
+                                <div class="tech-signal">
+                                    <div class="tech-wave bluetooth-wave tech-wave-1"></div>
+                                    <div class="tech-wave bluetooth-wave tech-wave-2"></div>
+                                    <div class="tech-wave bluetooth-wave tech-wave-3"></div>
+                                </div>
+                                <div class="tech-icon-base bluetooth-icon-base">
+                                    <div class="tech-icon-inner bluetooth-icon-inner">
+                                        <i class="fab fa-bluetooth-b"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <h4 class="tech-title">
+                                <span class="en">Bluetooth Systems</span>
+                                <span class="zh">蓝牙系统</span>
+                            </h4>
+                            <p class="tech-details en">BLE and classic Bluetooth integration for energy-efficient and reliable device connectivity</p>
+                            <p class="tech-details zh">低功耗蓝牙与经典蓝牙集成，实现节能可靠的设备连接</p>
+                            <div class="applications">
+                                <span class="app-tag">Smart Lighting</span>
+                                <span class="app-tag">Mobile Control</span>
+                                <span class="app-tag">Wearables</span>
+                            </div>
+                            <div class="nav-hint">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span class="en">Open in new window</span>
+                                <span class="zh">在新窗口打开</span>
+                            </div>
+                        </a>
+                        
+                        <!-- WiFi技术 -->
+                        <a href="wifi.html" target="_blank" class="nav-card wifi-card">
+                            <div class="tech-icon-container">
+                                <div class="tech-signal">
+                                    <div class="tech-wave wifi-wave tech-wave-1"></div>
+                                    <div class="tech-wave wifi-wave tech-wave-2"></div>
+                                    <div class="tech-wave wifi-wave tech-wave-3"></div>
+                                </div>
+                                <div class="tech-icon-base wifi-icon-base">
+                                    <div class="tech-icon-inner wifi-icon-inner">
+                                        <i class="fas fa-wifi"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <h4 class="tech-title">
+                                <span class="en">WiFi Integration</span>
+                                <span class="zh">WiFi集成</span>
+                            </h4>
+                            <p class="tech-details en">IoT and smart home WiFi solutions with cloud connectivity and remote access capabilities</p>
+                            <p class="tech-details zh">物联网和智能家居WiFi解决方案，具有云连接和远程访问能力</p>
+                            <div class="applications">
+                                <span class="app-tag">Smart Home</span>
+                                <span class="app-tag">Cloud Control</span>
+                                <span class="app-tag">Remote Access</span>
+                            </div>
+                            <div class="nav-hint">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span class="en">Open in new window</span>
+                                <span class="zh">在新窗口打开</span>
+                            </div>
+                        </a>
+
+                        <!-- 人体感应技术 -->
+                        <a href="sensor.html" target="_blank" class="nav-card sensor-card">
+                            <div class="tech-icon-container">
+                                <div class="tech-signal">
+                                    <div class="tech-wave sensor-wave tech-wave-1"></div>
+                                    <div class="tech-wave sensor-wave tech-wave-2"></div>
+                                    <div class="tech-wave sensor-wave tech-wave-3"></div>
+                                </div>
+                                <div class="tech-icon-base sensor-icon-base">
+                                    <div class="tech-icon-inner sensor-icon-inner">
+                                        <i class="fas fa-walking"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <h4 class="tech-title">
+                                <span class="en">Motion Sensing</span>
+                                <span class="zh">人体感应</span>
+                            </h4>
+                            <p class="tech-details en">PIR and microwave motion detection systems with adjustable sensitivity and range</p>
+                            <p class="tech-details zh">PIR与微波人体感应系统，具有可调灵敏度和检测范围</p>
+                            <div class="applications">
+                                <span class="app-tag">Automatic Lighting</span>
+                                <span class="app-tag">Security</span>
+                                <span class="app-tag">Energy Saving</span>
+                            </div>
+                            <div class="nav-hint">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span class="en">Open in new window</span>
+                                <span class="zh">在新窗口打开</span>
+                            </div>
+                        </a>
+
+                        <!-- 触摸技术 -->
+                        <a href="touch.html" target="_blank" class="nav-card touch-card">
+                            <div class="tech-icon-container">
+                                <div class="tech-signal">
+                                    <div class="tech-wave touch-wave tech-wave-1"></div>
+                                    <div class="tech-wave touch-wave tech-wave-2"></div>
+                                    <div class="tech-wave touch-wave tech-wave-3"></div>
+                                </div>
+                                <div class="tech-icon-base touch-icon-base">
+                                    <div class="tech-icon-inner touch-icon-inner">
+                                        <i class="fas fa-hand-pointer"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <h4 class="tech-title">
+                                <span class="en">Touch Control</span>
+                                <span class="zh">触摸技术</span>
+                            </h4>
+                            <p class="tech-details en">Capacitive and resistive touch solutions with multi-touch and gesture recognition</p>
+                            <p class="tech-details zh">电容式与电阻式触摸解决方案，支持多点触摸和手势识别</p>
+                            <div class="applications">
+                                <span class="app-tag">Dimming Panels</span>
+                                <span class="app-tag">Control Interfaces</span>
+                                <span class="app-tag">Smart Devices</span>
+                            </div>
+                            <div class="nav-hint">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span class="en">Open in new window</span>
+                                <span class="zh">在新窗口打开</span>
+                            </div>
+                        </a>
+
+                        <!-- 按键技术 -->
+                        <a href="button.html" target="_blank" class="nav-card button-card">
+                            <div class="tech-icon-container">
+                                <div class="tech-signal">
+                                    <div class="tech-wave button-wave tech-wave-1"></div>
+                                    <div class="tech-wave button-wave tech-wave-2"></div>
+                                    <div class="tech-wave button-wave tech-wave-3"></div>
+                                </div>
+                                <div class="tech-icon-base button-icon-base">
+                                    <div class="tech-icon-inner button-icon-inner">
+                                        <i class="fas fa-keyboard"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <h4 class="tech-title">
+                                <span class="en">Button Control</span>
+                                <span class="zh">按键技术</span>
+                            </h4>
+                            <p class="tech-details en">Tactile and membrane switch solutions with customizable functions and backlighting</p>
+                            <p class="tech-details zh">Tactile与薄膜按键解决方案，支持自定义功能和背光设计</p>
+                            <div class="applications">
+                                <span class="app-tag">Control Panels</span>
+                                <span class="app-tag">Remote Controls</span>
+                                <span class="app-tag">User Interfaces</span>
+                            </div>
+                            <div class="nav-hint">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span class="en">Open in new window</span>
+                                <span class="zh">在新窗口打开</span>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <h3 class="section-title">
+                        <i class="fas fa-project-diagram section-icon"></i>
+                        <span class="en">Featured Projects</span>
+                        <span class="zh">精选项目</span>
+                    </h3>
+                    
+                    <div class="projects-showcase">
+                        <div class="project-item">
+                            <div class="project-img">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <div class="project-content">
+                                <h4 class="project-title en">Smart Home Lighting System</h4>
+                                <h4 class="project-title zh">智能家居照明系统</h4>
+                                <p class="project-desc en">Integrated control solution for residential lighting with multiple connectivity options</p>
+                                <p class="project-desc zh">住宅照明集成控制解决方案，具有多种连接选项</p>
+                            </div>
+                        </div>
+                        
+                        <div class="project-item">
+                            <div class="project-img">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="project-content">
+                                <h4 class="project-title en">Commercial LED Control</h4>
+                                <h4 class="project-title zh">商业LED控制系统</h4>
+                                <p class="project-desc en">Large-scale LED control system for commercial buildings and public spaces</p>
+                                <p class="project-desc zh">用于商业建筑和公共空间的大规模LED控制系统</p>
+                            </div>
+                        </div>
+                        
+                        <div class="project-item">
+                            <div class="project-img">
+                                <i class="fas fa-industry"></i>
+                            </div>
+                            <div class="project-content">
+                                <h4 class="project-title en">Industrial Automation</h4>
+                                <h4 class="project-title zh">工业自动化系统</h4>
+                                <p class="project-desc en">Robust control systems for industrial lighting and automation applications</p>
+                                <p class="project-desc zh">用于工业照明和自动化应用的强大控制系统</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <footer>
+                <p class="en">© 2023 Xiao Yuewu - LED Control Technology Specialist</p>
+                <p class="zh">© 2023 肖跃武 - LED控制技术专家</p>
+                
+                <div class="social-links">
+                    <a href="javascript:void(0);" class="social-link tooltip" onclick="copyContact('EKU559')">
+                        <i class="fab fa-weixin"></i>
+                        <span class="tooltiptext en">WeChat: EKU559</span>
+                        <span class="tooltiptext zh">微信号: EKU559</span>
+                    </a>
+                    <a href="tel:+8618816761182" class="social-link">
+                        <i class="fas fa-phone"></i>
+                    </a>
+                    <a href="mailto:909323609@qq.com" class="social-link">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                    <a href="https://flbook.com.cn/c/g7PfxOUZ2f" class="social-link" target="_blank">
+                        <i class="fas fa-book-open"></i>
+                    </a>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        // 初始化粒子背景
+        particlesJS("particles-js", {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: "#0aabf0" },
+                shape: { type: "circle" },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: "#00ff8c",
+                    opacity: 0.4,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 2,
+                    direction: "none",
+                    random: true,
+                    straight: false,
+                    out_mode: "out",
+                    bounce: false
+                }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "repulse" },
+                    onclick: { enable: true, mode: "push" },
+                    resize: true
+                }
+            }
+        });
+
+        // 主题切换
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('change', function() {
+            if(this.checked) {
+                document.body.classList.remove('dark-theme');
+                document.body.classList.add('light-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.body.classList.remove('light-theme');
+                document.body.classList.add('dark-theme');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // 检查本地存储中的主题偏好
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.remove('dark-theme');
+            document.body.classList.add('light-theme');
+            themeToggle.checked = true;
+        }
+
+        // 语言切换
+        const langButtons = document.querySelectorAll('.lang-btn');
+        langButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                langButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                const lang = this.getAttribute('data-lang');
+                document.querySelectorAll('.en').forEach(el => {
+                    el.style.display = lang === 'en' ? 'inline' : 'none';
+                });
+                document.querySelectorAll('.zh').forEach(el => {
+                    el.style.display = lang === 'zh' ? 'inline' : 'none';
+                });
+                
+                localStorage.setItem('language', lang);
+            });
+        });
+
+        // 检查本地存储中的语言偏好
+        const savedLang = localStorage.getItem('language') || 'zh';
+        document.querySelectorAll('.en').forEach(el => {
+            el.style.display = savedLang === 'en' ? 'inline' : 'none';
+        });
+        document.querySelectorAll('.zh').forEach(el => {
+            el.style.display = savedLang === 'zh' ? 'inline' : 'none';
+        });
+        
+        // 设置对应的语言按钮为激活状态
+        document.querySelector(`.lang-btn[data-lang="${savedLang}"]`).classList.add('active');
+
+        // 复制功能
+        const copyButtons = document.querySelectorAll('.copy-btn');
+        const copyNotification = document.getElementById('copy-notification');
+        
+        copyButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const textToCopy = this.getAttribute('data-text');
+                copyToClipboard(textToCopy);
+            });
+        });
+
+        function copyContact(text) {
+            copyToClipboard(text);
+        }
+
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            // 显示复制成功提示
+            copyNotification.classList.add('show');
+            setTimeout(() => {
+                copyNotification.classList.remove('show');
+            }, 2000);
+        }
+
+        // 定位分享功能
+        function openLocationModal() {
+            document.getElementById('location-modal').classList.add('show');
+        }
+
+        function closeLocationModal() {
+            document.getElementById('location-modal').classList.remove('show');
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('location-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLocationModal();
+            }
+        });
+
+        // 复制地址功能
+        function copyAddress() {
+            const address = "深圳市鑫昱智能电子科技有限公司";
+            copyToClipboard(address);
+            closeLocationModal();
+        }
+
+        // 打开地图应用
+        function openMap(mapType) {
+            const companyName = "深圳市鑫昱智能电子科技有限公司";
+            let url = '';
+            
+            switch(mapType) {
+                case 'baidu':
+                    url = `https://map.baidu.com/search/${encodeURIComponent(companyName)}`;
+                    break;
+                case 'gaode':
+                    url = `https://ditu.amap.com/search?query=${encodeURIComponent(companyName)}`;
+                    break;
+                case 'tencent':
+                    url = `https://map.qq.com/search/search.html?word=${encodeURIComponent(companyName)}`;
+                    break;
+                case 'apple':
+                    url = `http://maps.apple.com/?q=${encodeURIComponent(companyName)}`;
+                    break;
+            }
+            
+            window.open(url, '_blank');
+            closeLocationModal();
+        }
+    </script>
+</body>
+</html>
